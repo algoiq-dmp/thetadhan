@@ -48,9 +48,11 @@ export class DhanClient {
   async getHoldings() { return this._request('GET', '/holdings'); }
 
   // ─── Market Data ───
-  async getMarketQuote(body) { return this._request('POST', '/marketfeed/ltp', body); }
+  async getMarketLTP(body) { return this._request('POST', '/marketfeed/ltp', body); }
   async getMarketOHLC(body) { return this._request('POST', '/marketfeed/ohlc', body); }
+  async getFullQuote(body) { return this._request('POST', '/marketfeed/quote', body); }
   async getOptionChain(body) { return this._request('POST', '/optionchain', body); }
+  async getExpiryList(body) { return this._request('POST', '/optionchain/expirylist', body); }
   async getHistorical(body) { return this._request('POST', '/charts/historical', body); }
   async getIntradayChart(body) { return this._request('POST', '/charts/intraday', body); }
 

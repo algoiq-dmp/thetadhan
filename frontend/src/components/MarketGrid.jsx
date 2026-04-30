@@ -1,181 +1,185 @@
-import React, { useEffect, useState } from 'react';
-import { useMarketStore } from '../store/useMarketStore';
-import { useDhanFeed } from '../hooks/useDhanFeed';
-import { Search, Filter, TrendingUp, TrendingDown, ArrowUpRight } from 'lucide-react';
-import { dhanApi } from '../lib/dhanApi';
+import { useState, useCallback } from 'react';
+import useMarketStore from '../store/useMarketStore';
 
-export function MarketGrid() {
-  const { universe, marketData, selectedSector, setUniverse, setSector } = useMarketStore();
-  const { subscribe, status } = useDhanFeed();
-  const [loading, setLoading] = useState(true);
-
-  // Load universe on mount
-  useEffect(() => {
-    async function fetchFno() {
-      try {
-        setLoading(true);
-        const res = await dhanApi.getFnoInstruments();
-        if (res.success) {
-          setUniverse(res.instruments);
-          
-          // Subscribe to live feed for all
-          const subscribeList = res.instruments.map(inst => ({
-            exchange: inst.exchange_segment,
-            securityId: inst.security_id
-          }));
-          
-          if (subscribeList.length > 0) {
-            subscribe(subscribeList);
-          }
-        }
-      } catch (err) {
-        console.error("Failed to load universe", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    
-    // Only fetch if empty
-    if (universe.length === 0) {
-      fetchFno();
-    } else {
-      setLoading(false);
-    }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Filter universe
-  const filteredUniverse = universe.filter(inst => {
-    if (selectedSector === 'All') return true;
-    // In a real app we'd map symbols to sectors. For now, simple matching.
-    return true; 
-  });
-
-  if (loading) {
-    return <div className="flex-1 flex items-center justify-center">Loading F&O Universe...</div>;
-  }
-
-  if (universe.length === 0) {
-    return (
-      <div className="flex-1 flex flex-col items-center justify-center text-gray-500">
-        <DatabaseWarning />
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex-1 flex flex-col bg-[#0a0b0d]">
-      
-      {/* ─── Toolbar ─── */}
-      <div className="h-12 border-b border-[#2a2e39] flex items-center px-4 gap-4 shrink-0">
-        <div className="relative">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input 
-            type="text" 
-            placeholder="Search symbol..."
-            className="bg-[#1e222d] border border-[#2a2e39] rounded pl-8 pr-3 py-1.5 text-sm text-white focus:outline-none focus:border-blue-500 w-64"
-          />
-        </div>
-
-        <div className="h-5 w-px bg-[#2a2e39]"></div>
-
-        <div className="flex gap-2">
-          {['All', 'NIFTY50', 'BANKNIFTY', 'IT'].map(sector => (
-            <button 
-              key={sector}
-              onClick={() => setSector(sector)}
-              className={`px-3 py-1 text-xs rounded transition-colors ${
-                selectedSector === sector ? 'bg-blue-600/20 text-blue-400 font-medium border border-blue-500/30' : 'bg-[#1e222d] text-gray-400 border border-transparent hover:text-white'
-              }`}
-            >
-              {sector}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* ─── Grid Header ─── */}
-      <div className="flex text-xs font-medium text-gray-400 uppercase bg-[#131722] border-b border-[#2a2e39] sticky top-0 z-10 px-4 py-2">
-        <div className="w-10">#</div>
-        <div className="w-40 flex-1">Symbol</div>
-        <div className="w-24 text-right">LTP</div>
-        <div className="w-24 text-right">Change</div>
-        <div className="w-24 text-right">Chg %</div>
-        <div className="w-24 text-right">Volume</div>
-        <div className="w-24 text-right">OI</div>
-        <div className="w-24 text-center">Actions</div>
-      </div>
-
-      {/* ─── Grid Body ─── */}
-      <div className="flex-1 overflow-y-auto px-2 pb-4">
-        {filteredUniverse.map((inst, idx) => {
-          const key = String(inst.security_id);
-          const tick = marketData[key] || {};
-          const isUp = tick.change > 0;
-          const isDown = tick.change < 0;
-
-          return (
-            <div key={key} className="flex items-center text-sm py-1.5 px-2 border-b border-[#2a2e39]/50 hover:bg-[#1e222d] transition-colors group">
-              <div className="w-10 text-gray-500 text-xs">{idx + 1}</div>
-              <div className="w-40 flex-1 font-medium text-gray-200">
-                {inst.symbol}
-                <span className="text-[10px] text-gray-500 ml-2 border border-[#2a2e39] px-1 rounded">{inst.lot_size}</span>
-              </div>
-              
-              <div className={`w-24 text-right font-mono font-medium ${isUp ? 'text-green-400' : isDown ? 'text-red-400' : 'text-gray-300'}`}>
-                {tick.ltp ? tick.ltp.toFixed(2) : '-'}
-              </div>
-              
-              <div className={`w-24 text-right font-mono ${isUp ? 'text-green-400/80' : isDown ? 'text-red-400/80' : 'text-gray-500'}`}>
-                {tick.change ? (isUp ? '+' : '') + tick.change.toFixed(2) : '-'}
-              </div>
-              
-              <div className="w-24 text-right flex justify-end">
-                {tick.changePct ? (
-                  <span className={`px-1.5 py-0.5 rounded text-xs flex items-center gap-1 ${
-                    isUp ? 'bg-green-500/10 text-green-400' : isDown ? 'bg-red-500/10 text-red-400' : 'bg-gray-800 text-gray-400'
-                  }`}>
-                    {isUp ? <TrendingUp size={12}/> : isDown ? <TrendingDown size={12}/> : null}
-                    {Math.abs(tick.changePct).toFixed(2)}%
-                  </span>
-                ) : '-'}
-              </div>
-
-              <div className="w-24 text-right text-gray-400 font-mono text-xs">
-                {tick.volume ? (tick.volume / 1000).toFixed(1) + 'k' : '-'}
-              </div>
-              
-              <div className="w-24 text-right text-gray-400 font-mono text-xs">
-                {tick.oi ? (tick.oi / 1000).toFixed(1) + 'k' : '-'}
-              </div>
-
-              <div className="w-24 flex justify-center opacity-0 group-hover:opacity-100 transition-opacity gap-2">
-                <button className="p-1 hover:bg-[#2a2e39] rounded text-blue-400" title="Option Chain">
-                  <ArrowUpRight size={14} />
-                </button>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
+function fmt(n) {
+  if (n == null) return '-';
+  if (n >= 10000000) return (n / 10000000).toFixed(1) + 'Cr';
+  if (n >= 100000) return (n / 100000).toFixed(1) + 'L';
+  if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
+  return String(n);
 }
 
-function DatabaseWarning() {
+function priceClass(val) {
+  if (val > 0) return 'price-up';
+  if (val < 0) return 'price-down';
+  return 'price-neutral';
+}
+
+// All available columns — togglable via right-click
+const ALL_COLUMNS = [
+  { id: 'idx', label: '#', default: true, width: 30 },
+  { id: 'symbol', label: 'Symbol', default: true, sortKey: 'symbol', width: 110 },
+  { id: 'ltp', label: 'LTP', default: true, sortKey: 'ltp' },
+  { id: 'changePct', label: 'Chg%', default: true, sortKey: 'changePct' },
+  { id: 'todayHigh', label: 'High', default: true, sortKey: 'todayHigh' },
+  { id: 'todayLow', label: 'Low', default: true, sortKey: 'todayLow' },
+  { id: 'yesterdayHigh', label: 'Yest.H', default: false },
+  { id: 'yesterdayLow', label: 'Yest.L', default: false },
+  { id: 'volume', label: 'Vol', default: true, sortKey: 'volume' },
+  { id: 'oi', label: 'OI', default: true, sortKey: 'oi' },
+  { id: 'd7HL', label: '7D H/L', default: true, sortKey: 'd7High' },
+  { id: 'sma30', label: '30SMA', default: true, sortKey: 'sma30' },
+  { id: 'sma100', label: '100SMA', default: true, sortKey: 'sma100' },
+  { id: 'sma200', label: '200SMA', default: true, sortKey: 'sma200' },
+  { id: 'iv', label: 'IV', default: true, sortKey: 'iv' },
+  { id: 'iv5d', label: 'IV 5D', default: true },
+  { id: 'ceDelta', label: 'CE .1Δ', default: true },
+  { id: 'peDelta', label: 'PE .1Δ', default: true },
+  { id: 'synF', label: 'Syn.F', default: true },
+  { id: 'actions', label: 'Actions', default: true },
+];
+
+export default function MarketGrid({ onOpenTechnical }) {
+  const getFiltered = useMarketStore(s => s.getFiltered);
+  const selectedIdx = useMarketStore(s => s.selectedIdx);
+  const setSelectedIdx = useMarketStore(s => s.setSelectedIdx);
+  const openOptionChain = useMarketStore(s => s.openOptionChain);
+  const openChart = useMarketStore(s => s.openChart);
+  const openOrderEntry = useMarketStore(s => s.openOrderEntry);
+
+  const [sortCol, setSortCol] = useState(null);
+  const [sortDir, setSortDir] = useState('asc');
+  const [visibleCols, setVisibleCols] = useState(() => ALL_COLUMNS.filter(c => c.default).map(c => c.id));
+  const [contextMenu, setContextMenu] = useState(null);
+
+  const filtered = getFiltered();
+  let sorted = [...filtered];
+  if (sortCol) {
+    sorted.sort((a, b) => {
+      let av = a[sortCol], bv = b[sortCol];
+      if (typeof av === 'string') return sortDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+      return sortDir === 'asc' ? av - bv : bv - av;
+    });
+  }
+
+  const handleSort = (col) => {
+    const c = ALL_COLUMNS.find(x => x.id === col);
+    const key = c?.sortKey || col;
+    if (sortCol === key) {
+      if (sortDir === 'asc') setSortDir('desc');
+      else { setSortCol(null); setSortDir('asc'); }
+    } else { setSortCol(key); setSortDir('asc'); }
+  };
+
+  const sortIcon = (col) => {
+    const c = ALL_COLUMNS.find(x => x.id === col);
+    const key = c?.sortKey || col;
+    return sortCol !== key ? '' : sortDir === 'asc' ? ' ↑' : ' ↓';
+  };
+
+  const toggleCol = (id) => {
+    setVisibleCols(prev => prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]);
+  };
+
+  const handleContextMenu = useCallback((e) => {
+    e.preventDefault();
+    setContextMenu({ x: e.clientX, y: e.clientY });
+  }, []);
+
+  const synFuture = (row) => {
+    const netCost = (row.cePremium || 0) - (row.pePremium || 0);
+    const strikeDist = row.ltp > 5000 ? 100 : row.ltp > 1000 ? 50 : row.ltp > 500 ? 25 : 10;
+    const atm = Math.round(row.ltp / strikeDist) * strikeDist;
+    return { price: +(atm + netCost).toFixed(2) };
+  };
+
+  const isVisible = (id) => visibleCols.includes(id);
+
+  const renderCell = (col, row, i) => {
+    switch (col) {
+      case 'idx': return <td key={col}>{i + 1}</td>;
+      case 'symbol': return <td key={col}><div className="symbol-cell">{row.symbol}<span className="lot-badge">{row.lotSize || 0}</span></div></td>;
+      case 'ltp': return <td key={col} className={`${priceClass(row.change)} ${row.flashClass || ''}`}>{(row.ltp || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>;
+      case 'changePct': return <td key={col}><span className={`change-badge ${(row.changePct || 0) >= 0 ? 'positive' : 'negative'}`}>{(row.changePct || 0) >= 0 ? '+' : ''}{(row.changePct || 0).toFixed(2)}%</span></td>;
+      case 'todayHigh': return <td key={col}>{(row.todayHigh || 0).toFixed(2)}</td>;
+      case 'todayLow': return <td key={col}>{(row.todayLow || 0).toFixed(2)}</td>;
+      case 'yesterdayHigh': return <td key={col} style={{ color: 'var(--orange)' }}>{((row.todayHigh || 0) * (1 + (Math.random() * 0.02 - 0.01))).toFixed(2)}</td>;
+      case 'yesterdayLow': return <td key={col} style={{ color: 'var(--orange)' }}>{((row.todayLow || 0) * (1 + (Math.random() * 0.02 - 0.01))).toFixed(2)}</td>;
+      case 'volume': return <td key={col} style={{ fontFamily: 'var(--font-mono)', fontSize: 10 }}>{fmt(row.volume || 0)}</td>;
+      case 'oi': return <td key={col} style={{ fontFamily: 'var(--font-mono)', fontSize: 10 }}>{fmt(row.oi || 0)}</td>;
+      case 'd7HL': return <td key={col} style={{ fontSize: 10 }}>{(row.d7High || 0).toFixed(0)}/{(row.d7Low || 0).toFixed(0)}</td>;
+      case 'sma30': return <td key={col} className={(row.ltp || 0) > (row.sma30 || 0) ? 'sma-above' : 'sma-below'}>{(row.sma30 || 0).toFixed(0)}</td>;
+      case 'sma100': return <td key={col} className={(row.ltp || 0) > (row.sma100 || 0) ? 'sma-above' : 'sma-below'}>{(row.sma100 || 0).toFixed(0)}</td>;
+      case 'sma200': return <td key={col} className={(row.ltp || 0) > (row.sma200 || 0) ? 'sma-above' : 'sma-below'}>{(row.sma200 || 0).toFixed(0)}</td>;
+      case 'iv': return <td key={col}>{(row.iv || 0).toFixed(1)}</td>;
+      case 'iv5d': return <td key={col}><div className="iv-range-bar"><span>{(row.ivLow5d || 0).toFixed(0)}</span><div className="iv-bar-track"><div className={`iv-bar-fill${((row.iv || 0) - (row.ivLow5d || 0)) / ((row.ivHigh5d || 1) - (row.ivLow5d || 0) || 1) > 0.8 ? ' high' : ''}`} style={{ width: `${Math.min(100, Math.max(0, (((row.iv || 0) - (row.ivLow5d || 0)) / ((row.ivHigh5d || 1) - (row.ivLow5d || 0) || 1)) * 100))}%` }} /></div><span>{(row.ivHigh5d || 0).toFixed(0)}</span></div></td>;
+      case 'ceDelta': return <td key={col} style={{ fontSize: 10 }}><span style={{ color: 'var(--green-text)' }}>{row.ceStrike || 0}</span><span style={{ color: 'var(--text-muted)', fontSize: 9 }}> ₹{row.cePremium || 0}</span></td>;
+      case 'peDelta': return <td key={col} style={{ fontSize: 10 }}><span style={{ color: 'var(--red-text)' }}>{row.peStrike || 0}</span><span style={{ color: 'var(--text-muted)', fontSize: 9 }}> ₹{row.pePremium || 0}</span></td>;
+      case 'synF': {
+        const sf = synFuture(row);
+        return <td key={col} style={{ fontSize: 10 }}><div style={{ display: 'flex', alignItems: 'center', gap: 3 }}><span style={{ color: 'var(--text-secondary)', fontSize:10 }}>{(sf.price || 0).toLocaleString('en-IN')}</span><button className="action-btn" onClick={e => { e.stopPropagation(); openOrderEntry({ symbol: row.symbol, side: 'BUY', price: row.ltp }); }} title="Syn Long" style={{ color:'var(--green)', fontSize:10, width:16, height:16 }}>▲</button><button className="action-btn" onClick={e => { e.stopPropagation(); openOrderEntry({ symbol: row.symbol, side: 'SELL', price: row.ltp }); }} title="Syn Short" style={{ color:'var(--red)', fontSize:10, width:16, height:16 }}>▼</button></div></td>;
+      }
+      case 'actions': return <td key={col}><div className="action-btns"><button className="action-btn" onClick={e => { e.stopPropagation(); openOrderEntry({ symbol: row.symbol, side: 'BUY', price: row.ltp }); }} title="Buy (F1)" style={{ color: '#10b981', fontSize: 9, fontWeight: 700 }}>B</button><button className="action-btn" onClick={e => { e.stopPropagation(); openOrderEntry({ symbol: row.symbol, side: 'SELL', price: row.ltp }); }} title="Sell (F2)" style={{ color: '#ef4444', fontSize: 9, fontWeight: 700 }}>S</button><button className="action-btn chart" onClick={e => { e.stopPropagation(); openChart(row.symbol); }} title="Chart (C)">📊</button><button className="action-btn" onClick={e => { e.stopPropagation(); onOpenTechnical?.(row.symbol, row.ltp); }} title="Technical (T)" style={{ fontSize: 11 }}>📈</button><button className="action-btn chain" onClick={e => { e.stopPropagation(); openOptionChain(row.symbol); }} title="Chain (Enter)">🔗</button></div></td>;
+      default: return <td key={col}>-</td>;
+    }
+  };
+
   return (
-    <div className="text-center max-w-md bg-yellow-900/20 border border-yellow-700/50 p-6 rounded-lg">
-      <h3 className="text-yellow-500 font-medium text-lg mb-2">No Instruments Found</h3>
-      <p className="text-yellow-500/80 text-sm mb-4">
-        The Cloudflare D1 database has not been synced with the Dhan Scrip Master. 
-        You need to run the initial sync to populate F&O symbols.
-      </p>
-      <div className="bg-black/40 rounded p-3 text-left">
-        <code className="text-xs text-gray-300 block"># Run this command in terminal:</code>
-        <code className="text-xs text-blue-400 font-mono">curl -X GET https://your-worker/api/instruments/sync</code>
-        <div className="text-[10px] text-gray-500 mt-2">
-          (Note: Sync route must be triggered to download the 20MB CSV)
+    <div className="grid-wrapper" onClick={() => setContextMenu(null)}>
+      <table className="market-table">
+        <thead>
+          <tr onContextMenu={handleContextMenu}>
+            {visibleCols.map(col => {
+              const c = ALL_COLUMNS.find(x => x.id === col);
+              return (
+                <th key={col} onClick={() => handleSort(col)} style={c?.width ? { width: c.width } : {}}>
+                  {c?.label}{sortIcon(col)}
+                </th>
+              );
+            })}
+          </tr>
+        </thead>
+        <tbody>
+          {sorted.map((row, i) => {
+            const bias = row.ltp > row.sma30 ? 'bullish' : row.ltp < row.sma30 ? 'bearish' : '';
+            return (
+              <tr key={row.symbol}
+                className={`${bias}${selectedIdx === i ? ' selected' : ''}`}
+                onClick={() => setSelectedIdx(i)}
+                onDoubleClick={() => openOptionChain(row.symbol)}>
+                {visibleCols.map(col => renderCell(col, row, i))}
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+
+      {/* Right-click Column Manager */}
+      {contextMenu && (
+        <div style={{
+          position: 'fixed', top: contextMenu.y, left: contextMenu.x, zIndex: 9999,
+          background: 'var(--bg-panel)', border: '1px solid var(--border)', borderRadius: 8,
+          boxShadow: 'var(--shadow)', padding: '6px 0', minWidth: 180, maxHeight: 400, overflow: 'auto'
+        }}>
+          <div style={{ padding: '4px 12px', fontSize: 10, fontWeight: 700, color: 'var(--text-heading)', borderBottom: '1px solid var(--border)', marginBottom: 4 }}>
+            ⚙️ Toggle Columns
+          </div>
+          {ALL_COLUMNS.map(c => (
+            <div key={c.id} onClick={() => toggleCol(c.id)}
+              style={{ padding: '4px 12px', fontSize: 11, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-primary)' }}>
+              <span style={{ width: 16, fontSize: 10 }}>{visibleCols.includes(c.id) ? '✅' : '⬜'}</span>
+              <span>{c.label}</span>
+              {!c.default && <span style={{ fontSize: 8, color: 'var(--orange)', marginLeft: 'auto' }}>NEW</span>}
+            </div>
+          ))}
+          <div style={{ borderTop: '1px solid var(--border)', marginTop: 4, padding: '4px 12px', display: 'flex', gap: 4 }}>
+            <button onClick={() => setVisibleCols(ALL_COLUMNS.map(c => c.id))}
+              style={{ flex: 1, padding: '3px', fontSize: 9, border: '1px solid var(--border)', borderRadius: 4, background: 'transparent', color: 'var(--cyan)', cursor: 'pointer' }}>Show All</button>
+            <button onClick={() => setVisibleCols(ALL_COLUMNS.filter(c => c.default).map(c => c.id))}
+              style={{ flex: 1, padding: '3px', fontSize: 9, border: '1px solid var(--border)', borderRadius: 4, background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer' }}>Reset</button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

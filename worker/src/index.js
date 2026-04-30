@@ -21,9 +21,17 @@ const app = new Hono();
 
 // ─── CORS ───
 app.use('*', cors({
-  origin: ['https://thetadhan.pages.dev', 'http://localhost:5173', 'http://localhost:5174'],
+  origin: (origin) => {
+    if (!origin) return '*';
+    // Allow all Cloudflare Pages deployment subdomains
+    if (origin.endsWith('.thetadhan-ui.pages.dev')) return origin;
+    if (origin === 'https://thetadhan-ui.pages.dev') return origin;
+    if (origin === 'https://thetadhan.pages.dev') return origin;
+    if (origin.startsWith('http://localhost:')) return origin;
+    return null;
+  },
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowHeaders: ['Content-Type', 'Authorization', 'X-Broker'],
+  allowHeaders: ['Content-Type', 'Authorization', 'X-Broker', 'X-Client-Id', 'X-Data-Token'],
   credentials: true,
 }));
 
@@ -95,8 +103,12 @@ async function syncInstrumentsToD1(csv, db) {
       if (!cols[idx.SEM_SMST_SECURITY_ID]) continue;
 
       // Only import NSE F&O + Equity segments
-      const segment = cols[idx.SEM_SEGMENT] || '';
-      if (!['NSE_EQ', 'NSE_FNO', 'BSE_EQ', 'MCX_COMM', 'NSE_CURRENCY'].includes(segment)) continue;
+      const exch = cols[idx.SEM_EXM_EXCH_ID] || '';
+      const seg = cols[idx.SEM_SEGMENT] || '';
+      let segment = '';
+      if (exch === 'NSE' && seg === 'D') segment = 'NSE_FNO';
+      else if (exch === 'NSE' && seg === 'C') segment = 'NSE_EQ';
+      else continue;
 
       batch.push(
         db.prepare(

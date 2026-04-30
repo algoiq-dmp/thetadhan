@@ -3256,14 +3256,20 @@ var DhanClient = class {
     return this._request("GET", "/holdings");
   }
   // ─── Market Data ───
-  async getMarketQuote(body) {
+  async getMarketLTP(body) {
     return this._request("POST", "/marketfeed/ltp", body);
   }
   async getMarketOHLC(body) {
     return this._request("POST", "/marketfeed/ohlc", body);
   }
+  async getFullQuote(body) {
+    return this._request("POST", "/marketfeed/quote", body);
+  }
   async getOptionChain(body) {
     return this._request("POST", "/optionchain", body);
+  }
+  async getExpiryList(body) {
+    return this._request("POST", "/optionchain/expirylist", body);
   }
   async getHistorical(body) {
     return this._request("POST", "/charts/historical", body);
@@ -3435,11 +3441,21 @@ function getClient3(c) {
   return new DhanClient(c.env, token, clientId);
 }
 __name(getClient3, "getClient");
+marketRoutes.post("/ltp", async (c) => {
+  try {
+    const client = getClient3(c);
+    const body = await c.req.json();
+    const data = await client.getMarketLTP(body);
+    return c.json({ success: true, data });
+  } catch (err) {
+    return c.json({ success: false, error: err.message }, 500);
+  }
+});
 marketRoutes.post("/quote", async (c) => {
   try {
     const client = getClient3(c);
     const body = await c.req.json();
-    const data = await client.getMarketQuote(body);
+    const data = await client.getMarketLTP(body);
     return c.json({ success: true, data });
   } catch (err) {
     return c.json({ success: false, error: err.message }, 500);
@@ -3455,6 +3471,16 @@ marketRoutes.post("/ohlc", async (c) => {
     return c.json({ success: false, error: err.message }, 500);
   }
 });
+marketRoutes.post("/fullquote", async (c) => {
+  try {
+    const client = getClient3(c);
+    const body = await c.req.json();
+    const data = await client.getFullQuote(body);
+    return c.json({ success: true, data });
+  } catch (err) {
+    return c.json({ success: false, error: err.message }, 500);
+  }
+});
 marketRoutes.post("/chain", async (c) => {
   try {
     const client = getClient3(c);
@@ -3465,11 +3491,21 @@ marketRoutes.post("/chain", async (c) => {
     return c.json({ success: false, error: err.message }, 500);
   }
 });
+function getDataClient(c) {
+  const dataToken = c.req.header("X-Data-Token") || c.env.DHAN_DATA_API_TOKEN || c.req.header("Authorization")?.replace("Bearer ", "");
+  const dataClientId = c.env.DHAN_DATA_CLIENT_ID || c.req.header("X-Client-Id");
+  if (!dataToken || !dataClientId)
+    throw new Error("Missing auth headers and no global Data API credentials found");
+  return new DhanClient(c.env, dataToken, dataClientId);
+}
+__name(getDataClient, "getDataClient");
 marketRoutes.post("/historical", async (c) => {
   try {
-    const client = getClient3(c);
+    const client = getDataClient(c);
     const body = await c.req.json();
-    const data = await client.getHistorical(body);
+    const isIntraday = body.isIntraday;
+    delete body.isIntraday;
+    const data = isIntraday ? await client.getIntradayChart(body) : await client.getHistorical(body);
     return c.json({ success: true, data });
   } catch (err) {
     return c.json({ success: false, error: err.message }, 500);
@@ -3477,9 +3513,19 @@ marketRoutes.post("/historical", async (c) => {
 });
 marketRoutes.post("/intraday", async (c) => {
   try {
-    const client = getClient3(c);
+    const client = getDataClient(c);
     const body = await c.req.json();
     const data = await client.getIntradayChart(body);
+    return c.json({ success: true, data });
+  } catch (err) {
+    return c.json({ success: false, error: err.message }, 500);
+  }
+});
+marketRoutes.post("/expirylist", async (c) => {
+  try {
+    const client = getClient3(c);
+    const body = await c.req.json();
+    const data = await client.getExpiryList(body);
     return c.json({ success: true, data });
   } catch (err) {
     return c.json({ success: false, error: err.message }, 500);
@@ -3504,6 +3550,54 @@ instrumentRoutes.get("/search", async (c) => {
   sql += ` ORDER BY symbol LIMIT ?`;
   params.push(limit);
   const { results } = await c.env.DB.prepare(sql).bind(...params).all();
+  return c.json({ success: true, instruments: results });
+});
+instrumentRoutes.post("/batch", async (c) => {
+  const body = await c.req.json().catch(() => ({}));
+  const symbols = (body.symbols || []).map((s) => s.toUpperCase()).filter(Boolean);
+  if (symbols.length === 0) {
+    return c.json({ success: true, instruments: [] });
+  }
+  const capped = symbols.slice(0, 200);
+  const placeholders = capped.map(() => "?").join(",");
+  const sql = `
+    SELECT * FROM instruments
+    WHERE symbol IN (${placeholders})
+    ORDER BY
+      CASE exchange_segment
+        WHEN 'NSE_FNO' THEN 1
+        WHEN 'NSE_EQ'  THEN 2
+        ELSE 3
+      END,
+      CASE instrument_type
+        WHEN 'FUTIDX' THEN 1
+        WHEN 'FUTSTK' THEN 2
+        WHEN 'OPTIDX' THEN 3
+        WHEN 'OPTSTK' THEN 4
+        ELSE 5
+      END,
+      expiry_date ASC
+    LIMIT ${capped.length * 3}
+  `;
+  const { results } = await c.env.DB.prepare(sql).bind(...capped).all();
+  const seen = /* @__PURE__ */ new Set();
+  const deduped = results.filter((r) => {
+    if (seen.has(r.symbol))
+      return false;
+    seen.add(r.symbol);
+    return true;
+  });
+  return c.json({ success: true, count: deduped.length, instruments: deduped });
+});
+instrumentRoutes.get("/search", async (c) => {
+  const q = c.req.query("q") || "";
+  if (q.length < 2)
+    return c.json({ success: true, instruments: [] });
+  const { results } = await c.env.DB.prepare(
+    `SELECT * FROM instruments 
+     WHERE symbol LIKE ? OR trading_symbol LIKE ? 
+     LIMIT 50`
+  ).bind(`%${q}%`, `%${q}%`).all();
   return c.json({ success: true, instruments: results });
 });
 instrumentRoutes.get("/fno", async (c) => {
@@ -3607,12 +3701,14 @@ instrumentRoutes.get("/sync", async (c) => {
           continue;
         const exch = cols[idx.SEM_EXM_EXCH_ID] || "";
         const seg = cols[idx.SEM_SEGMENT] || "";
-        if (exch !== "NSE" || seg !== "D")
+        let segment = "";
+        if (exch === "NSE" && seg === "D")
+          segment = "NSE_FNO";
+        else if (exch === "NSE" && seg === "C")
+          segment = "NSE_EQ";
+        else
           continue;
-        const segment = "NSE_FNO";
         const symbol = cols[idx.SEM_CUSTOM_SYMBOL] || cols[idx.SEM_TRADING_SYMBOL] || "";
-        if (!symbol.startsWith("NIFTY") && !symbol.startsWith("BANKNIFTY") && !symbol.startsWith("RELIANCE"))
-          continue;
         batch.push(
           c.env.DB.prepare(
             `INSERT OR REPLACE INTO instruments (security_id, symbol, trading_symbol, exchange_segment, instrument_type, lot_size, expiry_date, strike_price, option_type)
@@ -3967,9 +4063,21 @@ __name(FeedRelay, "FeedRelay");
 // src/index.js
 var app = new Hono2();
 app.use("*", cors({
-  origin: ["https://thetadhan.pages.dev", "http://localhost:5173", "http://localhost:5174"],
+  origin: (origin) => {
+    if (!origin)
+      return "*";
+    if (origin.endsWith(".thetadhan-ui.pages.dev"))
+      return origin;
+    if (origin === "https://thetadhan-ui.pages.dev")
+      return origin;
+    if (origin === "https://thetadhan.pages.dev")
+      return origin;
+    if (origin.startsWith("http://localhost:"))
+      return origin;
+    return null;
+  },
   allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowHeaders: ["Content-Type", "Authorization", "X-Broker"],
+  allowHeaders: ["Content-Type", "Authorization", "X-Broker", "X-Client-Id", "X-Data-Token"],
   credentials: true
 }));
 app.get("/", (c) => c.json({
@@ -4036,8 +4144,14 @@ async function syncInstrumentsToD1(csv, db) {
       const cols = lines[j].split(",").map((c) => c.trim().replace(/"/g, ""));
       if (!cols[idx.SEM_SMST_SECURITY_ID])
         continue;
-      const segment = cols[idx.SEM_SEGMENT] || "";
-      if (!["NSE_EQ", "NSE_FNO", "BSE_EQ", "MCX_COMM", "NSE_CURRENCY"].includes(segment))
+      const exch = cols[idx.SEM_EXM_EXCH_ID] || "";
+      const seg = cols[idx.SEM_SEGMENT] || "";
+      let segment = "";
+      if (exch === "NSE" && seg === "D")
+        segment = "NSE_FNO";
+      else if (exch === "NSE" && seg === "C")
+        segment = "NSE_EQ";
+      else
         continue;
       batch.push(
         db.prepare(

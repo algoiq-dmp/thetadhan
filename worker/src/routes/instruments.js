@@ -30,7 +30,70 @@ instrumentRoutes.get('/search', async (c) => {
   return c.json({ success: true, instruments: results });
 });
 
+// POST /api/instruments/batch — Batch lookup by exact symbols (single D1 query)
+// Body: { symbols: ['NIFTY', 'BANKNIFTY', 'RELIANCE', ...] }
+instrumentRoutes.post('/batch', async (c) => {
+  const body = await c.req.json().catch(() => ({}));
+  const symbols = (body.symbols || []).map(s => s.toUpperCase()).filter(Boolean);
+
+  if (symbols.length === 0) {
+    return c.json({ success: true, instruments: [] });
+  }
+
+  // Cap at 200 symbols per batch to protect D1
+  const capped = symbols.slice(0, 200);
+
+  // Build IN clause: SELECT where symbol IN (?, ?, ...)
+  const placeholders = capped.map(() => '?').join(',');
+
+  // For each symbol, get the most relevant instrument (prefer index/futures, then equity)
+  const sql = `
+    SELECT * FROM instruments
+    WHERE symbol IN (${placeholders})
+    ORDER BY
+      CASE exchange_segment
+        WHEN 'NSE_FNO' THEN 1
+        WHEN 'NSE_EQ'  THEN 2
+        ELSE 3
+      END,
+      CASE instrument_type
+        WHEN 'FUTIDX' THEN 1
+        WHEN 'FUTSTK' THEN 2
+        WHEN 'OPTIDX' THEN 3
+        WHEN 'OPTSTK' THEN 4
+        ELSE 5
+      END,
+      expiry_date ASC
+    LIMIT ${capped.length * 3}
+  `;
+
+  const { results } = await c.env.DB.prepare(sql).bind(...capped).all();
+
+  // Deduplicate — return one best result per symbol
+  const seen = new Set();
+  const deduped = results.filter(r => {
+    if (seen.has(r.symbol)) return false;
+    seen.add(r.symbol);
+    return true;
+  });
+
+  return c.json({ success: true, count: deduped.length, instruments: deduped });
+});
+
 // GET /api/instruments/fno — All F&O tradeable symbols (unique underlyings)
+instrumentRoutes.get('/search', async (c) => {
+  const q = c.req.query('q') || '';
+  if (q.length < 2) return c.json({ success: true, instruments: [] });
+
+  const { results } = await c.env.DB.prepare(
+    `SELECT * FROM instruments 
+     WHERE symbol LIKE ? OR trading_symbol LIKE ? 
+     LIMIT 50`
+  ).bind(`%${q}%`, `%${q}%`).all();
+
+  return c.json({ success: true, instruments: results });
+});
+
 instrumentRoutes.get('/fno', async (c) => {
   const { results } = await c.env.DB.prepare(
     `SELECT DISTINCT symbol, MIN(security_id) as security_id, exchange_segment, 
@@ -142,16 +205,17 @@ instrumentRoutes.get('/sync', async (c) => {
         const cols = lines[j].split(',').map(c => c.trim().replace(/"/g, ''));
         if (!cols[idx.SEM_SMST_SECURITY_ID]) continue;
 
-        // Only import NSE_FNO
+        // Only import NSE_FNO and NSE_EQ
         const exch = cols[idx.SEM_EXM_EXCH_ID] || '';
         const seg = cols[idx.SEM_SEGMENT] || '';
-        if (exch !== 'NSE' || seg !== 'D') continue;
-        const segment = 'NSE_FNO';
+        let segment = '';
+        
+        if (exch === 'NSE' && seg === 'D') segment = 'NSE_FNO';
+        else if (exch === 'NSE' && seg === 'C') segment = 'NSE_EQ';
+        else continue;
 
-        // For local testing: drastically limit to only NIFTY and BANKNIFTY to avoid hanging the D1 emulator
         const symbol = cols[idx.SEM_CUSTOM_SYMBOL] || cols[idx.SEM_TRADING_SYMBOL] || '';
-        if (!symbol.startsWith('NIFTY') && !symbol.startsWith('BANKNIFTY') && !symbol.startsWith('RELIANCE')) continue;
-
+        
         batch.push(
           c.env.DB.prepare(
             `INSERT OR REPLACE INTO instruments (security_id, symbol, trading_symbol, exchange_segment, instrument_type, lot_size, expiry_date, strike_price, option_type)

@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Theta Yantra | Knowledge Base</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0e17; --bg-card: #111827; --bg-panel: #0f1420; --bg-hover: #1a2035;
+      --border: #1e2a3a; --text: #e2e8f0; --text-muted: #64748b; --text-heading: #f8fafc;
+      --blue: #3b82f6; --green: #10b981; --red: #ef4444; --cyan: #06b6d4;
+      --orange: #f59e0b; --purple: #8b5cf6; --pink: #ec4899;
+      --green-soft: rgba(16,185,129,0.1); --red-soft: rgba(239,68,68,0.1);
+      --blue-soft: rgba(59,130,246,0.1); --cyan-soft: rgba(6,182,212,0.1);
+      --orange-soft: rgba(245,158,11,0.1); --purple-soft: rgba(139,92,246,0.1);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+    
+    /* Layout */
+    .app { display: flex; min-height: 100vh; }
+    .sidebar { width: 280px; background: var(--bg-panel); border-right: 1px solid var(--border); position: fixed; top: 0; left: 0; height: 100vh; overflow-y: auto; z-index: 100; }
+    .main { margin-left: 280px; flex: 1; padding: 32px 48px; max-width: 960px; }
+    
+    /* Sidebar */
+    .sidebar-header { padding: 20px 20px 16px; border-bottom: 1px solid var(--border); }
+    .sidebar-logo { display: flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 800; color: var(--text-heading); }
+    .sidebar-logo span { font-size: 22px; }
+    .sidebar-badge { font-size: 9px; padding: 2px 8px; border-radius: 10px; background: var(--cyan-soft); color: var(--cyan); font-weight: 600; letter-spacing: 0.5px; }
+    
+    .sidebar-search { padding: 12px 16px; }
+    .sidebar-search input {
+      width: 100%; height: 34px; padding: 0 12px; border: 1px solid var(--border); border-radius: 8px;
+      background: var(--bg); color: var(--text); font-size: 12px; outline: none; font-family: inherit;
+    }
+    .sidebar-search input:focus { border-color: var(--blue); }
+    .sidebar-search input::placeholder { color: var(--text-muted); }
+    
+    .nav-group { padding: 8px 12px; }
+    .nav-group-title { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; padding: 8px 8px 4px; }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 8px;
+      font-size: 13px; font-weight: 500; color: var(--text-muted); cursor: pointer; transition: all 0.15s;
+      text-decoration: none;
+    }
+    .nav-item:hover { background: var(--bg-hover); color: var(--text); }
+    .nav-item.active { background: var(--blue-soft); color: var(--blue); font-weight: 600; }
+    .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+    .nav-count { margin-left: auto; font-size: 10px; padding: 1px 6px; border-radius: 8px; background: var(--bg); color: var(--text-muted); font-weight: 500; }
+    
+    /* Content */
+    h1 { font-size: 28px; font-weight: 800; color: var(--text-heading); margin-bottom: 8px; letter-spacing: -0.5px; }
+    h2 { font-size: 20px; font-weight: 700; color: var(--text-heading); margin: 40px 0 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+    h3 { font-size: 15px; font-weight: 700; color: var(--cyan); margin: 24px 0 12px; }
+    h4 { font-size: 13px; font-weight: 600; color: var(--text); margin: 16px 0 8px; }
+    p { margin-bottom: 12px; font-size: 14px; color: var(--text-muted); }
+    
+    .subtitle { font-size: 15px; color: var(--text-muted); margin-bottom: 24px; }
+    
+    /* Cards */
+    .feature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0; }
+    .feature-card {
+      padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg-card);
+      transition: all 0.2s; cursor: default;
+    }
+    .feature-card:hover { border-color: var(--blue); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+    .feature-card .icon { font-size: 24px; margin-bottom: 8px; }
+    .feature-card .title { font-size: 13px; font-weight: 700; color: var(--text-heading); margin-bottom: 4px; }
+    .feature-card .desc { font-size: 11px; color: var(--text-muted); line-height: 1.5; }
+    .feature-card .tag { display: inline-block; font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: 600; margin-top: 8px; }
+    .tag-new { background: var(--green-soft); color: var(--green); }
+    .tag-enhanced { background: var(--blue-soft); color: var(--blue); }
+    .tag-ai { background: var(--purple-soft); color: var(--purple); }
+    .tag-showstopper { background: var(--orange-soft); color: var(--orange); }
+    
+    /* Tables */
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 12px; }
+    th { padding: 8px 12px; background: var(--bg-card); color: var(--text-muted); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; text-align: left; border-bottom: 2px solid var(--border); }
+    td { padding: 8px 12px; border-bottom: 1px solid var(--border); color: var(--text); }
+    tr:hover td { background: var(--bg-hover); }
+    
+    /* Shortcut table */
+    .kbd { display: inline-block; padding: 2px 8px; border-radius: 4px; background: var(--bg-card); border: 1px solid var(--border); font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); }
+    
+    /* Code blocks */
+    pre { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; overflow-x: auto; margin: 12px 0; font-size: 12px; }
+    code { font-family: 'JetBrains Mono', monospace; color: var(--cyan); }
+    
+    /* Alert boxes */
+    .alert { padding: 14px 16px; border-radius: 8px; margin: 12px 0; font-size: 12px; display: flex; align-items: flex-start; gap: 10px; }
+    .alert-info { background: var(--blue-soft); border: 1px solid rgba(59,130,246,0.3); color: var(--blue); }
+    .alert-success { background: var(--green-soft); border: 1px solid rgba(16,185,129,0.3); color: var(--green); }
+    .alert-warning { background: var(--orange-soft); border: 1px solid rgba(245,158,11,0.3); color: var(--orange); }
+    .alert-danger { background: var(--red-soft); border: 1px solid rgba(239,68,68,0.3); color: var(--red); }
+    
+    /* Section anchors */
+    section { scroll-margin-top: 24px; }
+    
+    /* Stats bar */
+    .stats-bar { display: flex; gap: 12px; margin: 20px 0; flex-wrap: wrap; }
+    .stat { padding: 12px 20px; border-radius: 10px; background: var(--bg-card); border: 1px solid var(--border); text-align: center; flex: 1; min-width: 120px; }
+    .stat-value { font-size: 24px; font-weight: 800; color: var(--text-heading); font-family: 'JetBrains Mono', monospace; }
+    .stat-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+    
+    /* Comparison */
+    .vs-row td:nth-child(2) { color: var(--text-muted); }
+    .vs-row td:nth-child(3) { color: var(--green); font-weight: 600; }
+    .check { color: var(--green); } .cross { color: var(--red); }
+    
+    /* Architecture diagram */
+    .arch-box { padding: 20px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg-card); font-family: 'JetBrains Mono', monospace; font-size: 11px; white-space: pre; overflow-x: auto; line-height: 1.5; color: var(--text-muted); margin: 16px 0; }
+    
+    /* Timeline */
+    .timeline { margin: 16px 0; }
+    .timeline-item { display: flex; gap: 16px; padding: 12px 0; border-left: 2px solid var(--border); margin-left: 12px; padding-left: 20px; position: relative; }
+    .timeline-item::before { content: ''; position: absolute; left: -6px; top: 16px; width: 10px; height: 10px; border-radius: 50%; background: var(--blue); border: 2px solid var(--bg); }
+    .timeline-item.done::before { background: var(--green); }
+    .timeline-item.active::before { background: var(--orange); box-shadow: 0 0 8px var(--orange); }
+    .sprint-label { font-size: 10px; font-weight: 700; color: var(--blue); text-transform: uppercase; letter-spacing: 0.5px; min-width: 60px; }
+    .sprint-content .sprint-title { font-size: 13px; font-weight: 600; color: var(--text-heading); }
+    .sprint-content .sprint-desc { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    
+    /* Responsive */
+    @media (max-width: 900px) {
+      .sidebar { display: none; }
+      .main { margin-left: 0; padding: 24px; }
+      .feature-grid { grid-template-columns: 1fr; }
+    }
+    
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+  </style>
+</head>
+<body>
+<div class="app">
+  <!-- Sidebar Navigation -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo"><span>⚡</span> Theta Yantra <span class="sidebar-badge">V5</span></div>
+    </div>
+    <div class="sidebar-search">
+      <input type="text" placeholder="Search features... (Ctrl+K)" id="kbSearch" oninput="filterSections(this.value)">
+    </div>
+    
+    <div class="nav-group">
+      <div class="nav-group-title">Overview</div>
+      <a class="nav-item active" href="#overview"><span class="nav-icon">🏠</span> Product Overview</a>
+      <a class="nav-item" href="#architecture"><span class="nav-icon">🏗️</span> Architecture</a>
+      <a class="nav-item" href="#competitive"><span class="nav-icon">⚔️</span> Competitive Analysis</a>
+    </div>
+    
+    <div class="nav-group">
+      <div class="nav-group-title">Core Features</div>
+      <a class="nav-item" href="#views"><span class="nav-icon">📺</span> Views & Layouts <span class="nav-count">8</span></a>
+      <a class="nav-item" href="#panels"><span class="nav-icon">📊</span> Right Panels <span class="nav-count">22</span></a>
+      <a class="nav-item" href="#marketwatch"><span class="nav-icon">📋</span> Market Watch <span class="nav-count">25+</span></a>
+      <a class="nav-item" href="#optionchain"><span class="nav-icon">🔗</span> Option Chain</a>
+      <a class="nav-item" href="#orders"><span class="nav-icon">📝</span> Order System</a>
+    </div>
+    
+    <div class="nav-group">
+      <div class="nav-group-title">Execution</div>
+      <a class="nav-item" href="#keyboard"><span class="nav-icon">⌨️</span> Keyboard Shortcuts <span class="nav-count">35+</span></a>
+      <a class="nav-item" href="#quickfire"><span class="nav-icon">🔥</span> Quick Fire Macros <span class="nav-count">15</span></a>
+      <a class="nav-item" href="#bracket"><span class="nav-icon">🎯</span> Bracket & Trailing SL</a>
+      <a class="nav-item" href="#safety"><span class="nav-icon">🛡️</span> Order Safety</a>
+      <a class="nav-item" href="#charts"><span class="nav-icon">📈</span> OHLC & HA Charts</a>
+      <a class="nav-item" href="#heikinashi"><span class="nav-icon">🔮</span> Heikin Ashi AI</a>
+    </div>
+    
+    <div class="nav-group">
+      <div class="nav-group-title">Intelligence</div>
+      <a class="nav-item" href="#ai"><span class="nav-icon">🤖</span> AI Agents <span class="nav-count">7</span></a>
+      <a class="nav-item" href="#scanner"><span class="nav-icon">🔍</span> Live Scanner <span class="nav-count">20+</span></a>
+      <a class="nav-item" href="#alerts"><span class="nav-icon">🔔</span> Alerts & Voice</a>
+      <a class="nav-item" href="#oi"><span class="nav-icon">📊</span> OI Analysis</a>
+    </div>
+    
+    <div class="nav-group">
+      <div class="nav-group-title">Security & Auth</div>
+      <a class="nav-item" href="#security"><span class="nav-icon">🔐</span> 3FA Authentication</a>
+      <a class="nav-item" href="#talkoptions"><span class="nav-icon">🧠</span> TalkOptions API <span class="nav-count">13</span></a>
+      <a class="nav-item" href="#talkdelta"><span class="nav-icon">📡</span> TalkDelta Feed</a>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-title">Infrastructure</div>
+      <a class="nav-item" href="#engines"><span class="nav-icon">⚙️</span> Engine Integration <span class="nav-count">7</span></a>
+      <a class="nav-item" href="#broadcast"><span class="nav-icon">📡</span> Broadcast Manager</a>
+      <a class="nav-item" href="#settings"><span class="nav-icon">🔧</span> Settings <span class="nav-count">10 tabs</span></a>
+      <a class="nav-item" href="#pwa"><span class="nav-icon">💻</span> Desktop App (PWA)</a>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-title">BRS & Backend</div>
+      <a class="nav-item" href="#brs"><span class="nav-icon">📋</span> BRS Document</a>
+      <a class="nav-item" href="#backend"><span class="nav-icon">🏗️</span> Backend Architecture</a>
+      <a class="nav-item" href="#datacontracts"><span class="nav-icon">📄</span> Data Contracts</a>
+      <a class="nav-item" href="#devguide"><span class="nav-icon">🛠️</span> Dev Guide</a>
+    </div>
+    
+    <div class="nav-group">
+      <div class="nav-group-title">Roadmap</div>
+      <a class="nav-item" href="#sprints"><span class="nav-icon">🚀</span> Sprint Plan</a>
+      <a class="nav-item" href="#future"><span class="nav-icon">🔮</span> Future Features <span class="nav-count">100+</span></a>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main">
+    
+    <!-- Overview -->
+    <section id="overview">
+      <h1>⚡ SRE Theta Yantra — V5 Knowledge Base</h1>
+      <p class="subtitle">World-class professional NSE F&O semi-algo trading terminal — powered by 21-engine AlgoEngines infrastructure</p>
+      
+      <div class="stats-bar">
+        <div class="stat"><div class="stat-value">8</div><div class="stat-label">Trading Views</div></div>
+        <div class="stat"><div class="stat-value">11</div><div class="stat-label">Analysis Panels</div></div>
+        <div class="stat"><div class="stat-value">35+</div><div class="stat-label">Keyboard Shortcuts</div></div>
+        <div class="stat"><div class="stat-value">7</div><div class="stat-label">AI Agents</div></div>
+        <div class="stat"><div class="stat-value">3FA</div><div class="stat-label">Auth Security</div></div>
+        <div class="stat"><div class="stat-value">21</div><div class="stat-label">Backend Engines</div></div>
+      </div>
+      
+      <div class="alert alert-info">
+        <span>💡</span> Theta Yantra V4 combines the best of Sahi Pro, ODIN, GETS, and Bloomberg — enhanced with our proprietary 21-engine AlgoEngines backend, AI agent layer, and institutional-grade risk management.
+      </div>
+    </section>
+
+    <!-- Architecture -->
+    <section id="architecture">
+      <h2>🏗️ Architecture — 3-Panel Layout</h2>
+      <div class="arch-box">┌──────────────────────────────────────────────────────────────────────────┐
+│  HEADER: Logo │ NIFTY ticker │ Engine dots │ 🔍📊⚡☀️⛶⚙️ │ P&L │ Clock │
+├──────────────────────────────────────────────────────────────────────────┤
+│  TOOLBAR: Search │ Sector pills │ Movement filter │ Showing count       │
+├────────┬───────────────────────────────────────────┬─────────────────────┤
+│  LEFT  │           MAIN CONTENT AREA               │   RIGHT SIDEBAR     │
+│  NAV   │  (changes based on active view)            │   (9 switchable     │
+│  BAR   │                                            │    panels)          │
+│  48px  │  Scalper │ Options │ Stocks │ Strategy      │   Watchlist         │
+│        │  Market Watch │ Terminal │ IV │ Custom       │   Scanners         │
+│  8     │                                            │   Alerts            │
+│ icons  │                                            │   Option Chain      │
+│        │                                            │   AI Analysis       │
+│        │                                            │   OI Analysis       │
+│        │                                            │   ATM Analysis      │
+│        │                                            │   Positions         │
+│        │                                            │   Orders            │
+├────────┴───────────────────────────────────────────┴─────────────────────┤
+│  STATUSBAR: Adv │ Dec │ NIFTY │ BANKNIFTY │ Feed │ Latency │ Engines    │
+└──────────────────────────────────────────────────────────────────────────┘</div>
+    </section>
+
+    <!-- Competitive Analysis -->
+    <section id="competitive">
+      <h2>⚔️ Competitive Analysis — Theta Yantra vs Sahi Pro vs ODIN</h2>
+      <table>
+        <thead><tr><th>Feature</th><th>Sahi Pro</th><th>ODIN</th><th>Theta Yantra V4</th></tr></thead>
+        <tbody class="vs-row">
+          <tr><td>Layout System</td><td>7 views + Custom</td><td>Workspace tabs</td><td><strong>8 views + drag-drop widgets</strong></td></tr>
+          <tr><td>AI Analysis</td><td>Basic trend text</td><td>❌ None</td><td><strong>7 specialized AI agents + voice</strong></td></tr>
+          <tr><td>OI Analysis</td><td>OI bars + PCR</td><td>Basic OI</td><td><strong>OI + Change + Heatmap + PCR + AI</strong></td></tr>
+          <tr><td>Execution Speed</td><td>1-Tap</td><td>F1/F2</td><td><strong>ODIN keys + QuickFire Macros + 1-Tap</strong></td></tr>
+          <tr><td>Scanner</td><td>Gainers/Losers</td><td>Basic filter</td><td><strong>20+ filters: Pivot/SuperTrend/IV/Custom</strong></td></tr>
+          <tr><td>Risk Management</td><td>Auto SL/TP</td><td>RMS limits</td><td><strong>Full OMS/RMS + Kill Switch + AI validation</strong></td></tr>
+          <tr><td>Data Backend</td><td>Single broker</td><td>Exchange feed</td><td><strong>21-engine AlgoEngines ecosystem</strong></td></tr>
+          <tr><td>Voice Alerts</td><td>❌</td><td>❌</td><td><strong>✅ Web Speech API</strong></td></tr>
+          <tr><td>Custom Scrip Insert</td><td>Basic add</td><td>✅ Insert key</td><td><strong>✅ Insert + option contract builder</strong></td></tr>
+          <tr><td>Strategy Builder</td><td>Payoff + Greeks</td><td>❌</td><td><strong>Payoff + Greeks + Monte Carlo</strong></td></tr>
+          <tr><td>Desktop App</td><td>Windows app</td><td>Windows app</td><td><strong>PWA: install from browser</strong></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Views -->
+    <section id="views">
+      <h2>📺 Trading Views (8 Modes)</h2>
+      <div class="feature-grid">
+        <div class="feature-card"><div class="icon">⚡</div><div class="title">Scalper View</div><div class="desc">High-speed execution cockpit. Dual chart, 1-tap orders, market depth, chart-based order placement.</div><span class="tag tag-new">NEW</span></div>
+        <div class="feature-card"><div class="icon">📊</div><div class="title">Options Trader</div><div class="desc">Option Chain (left) + Candlestick Chart (center) + ATM IV/Straddle analysis (right). Sahi-inspired 3-panel.</div><span class="tag tag-new">NEW</span></div>
+        <div class="feature-card"><div class="icon">📈</div><div class="title">Stocks View</div><div class="desc">Scanner list + Chart + Market Depth + Live Snapshot (today H/L, 52W H/L, OHLC).</div><span class="tag tag-new">NEW</span></div>
+        <div class="feature-card"><div class="icon">📉</div><div class="title">IV Analysis</div><div class="desc">IV surface, IV rank, IV percentile, IV skew. Connected to Garuda/TalkOptions engines.</div><span class="tag tag-new">NEW</span></div>
+        <div class="feature-card"><div class="icon">🎯</div><div class="title">Strategy Builder</div><div class="desc">Multi-leg builder with payoff diagram, max loss/profit, probability, Greeks, breakeven analysis.</div><span class="tag tag-new">NEW</span></div>
+        <div class="feature-card"><div class="icon">📺</div><div class="title">Market Watch</div><div class="desc">Multi-chart grid (2×3 configurable). Independent charts for NIFTY, BANKNIFTY, stocks. TradingView integration.</div><span class="tag tag-new">NEW</span></div>
+        <div class="feature-card"><div class="icon">📋</div><div class="title">Terminal View</div><div class="desc">Full 177-symbol market grid with 25+ columns, SMA color coding, IV bars, synthetic futures, action buttons.</div><span class="tag tag-enhanced">ENHANCED</span></div>
+        <div class="feature-card"><div class="icon">⚙️</div><div class="title">Custom Layout</div><div class="desc">Drag-drop widget workspace. Add/remove/resize widgets. Save named layouts. Bloomberg-style flexibility.</div><span class="tag tag-new">NEW</span></div>
+      </div>
+    </section>
+
+    <!-- Right Panels -->
+    <section id="panels">
+      <h2>📊 Right Sidebar Panels (9 Switchable)</h2>
+      <div class="feature-grid">
+        <div class="feature-card"><div class="icon">📋</div><div class="title">Watchlist</div><div class="desc">Multiple named watchlists (tabs). Live Snapshot: Today H/L bar, 52W H/L bar, Open/Prev Close. Custom columns.</div></div>
+        <div class="feature-card"><div class="icon">🔍</div><div class="title">Scanners</div><div class="desc">Gainers/Losers/Volume/Custom filters. 20+ presets: Pivot/SuperTrend/IV/OI. Full universe scan, 1s interval.</div><span class="tag tag-showstopper">SHOW-STOPPER</span></div>
+        <div class="feature-card"><div class="icon">🔔</div><div class="title">Super Alerts</div><div class="desc">Custom alert builder: Price/OI/IV/PCR/Volume conditions. Voice + Sound + Toast delivery. Near circuit alerts.</div></div>
+        <div class="feature-card"><div class="icon">🔗</div><div class="title">Option Chain</div><div class="desc">Compact sidebar chain with Max Pain, OI Support/Resistance labels. Per-strike Buy/Sell/Chart/Alert icons.</div></div>
+        <div class="feature-card"><div class="icon">🤖</div><div class="title">AI Analysis</div><div class="desc">Natural language market insights: Trend, RSI, ADR, PCR, OI proximity. "Summarized by Theta AI".</div><span class="tag tag-ai">AI POWERED</span></div>
+        <div class="feature-card"><div class="icon">📊</div><div class="title">OI Analysis</div><div class="desc">OI bars (Call/Put by strike), OI Change chart (timeframe selector), PCR ratio chart. Max Pain + OI Resistance.</div></div>
+        <div class="feature-card"><div class="icon">📈</div><div class="title">ATM Analysis</div><div class="desc">ATM IV chart (Price + IV overlay), ATM Straddle chart (Price + Straddle overlay). Expiry selector.</div></div>
+        <div class="feature-card"><div class="icon">💰</div><div class="title">Positions</div><div class="desc">Open/Closed positions. Net P&L, Greeks exposure. Exit-all, Reverse-all, Hedge-all panic buttons.</div></div>
+        <div class="feature-card"><div class="icon">📝</div><div class="title">Orders</div><div class="desc">Open/Completed/Cancelled/Rejected tabs. Modify/Cancel from panel. Order history with timestamps.</div></div>
+      </div>
+    </section>
+
+    <!-- Market Watch Features -->
+    <section id="marketwatch">
+      <h2>📋 Market Watch — Advanced Features</h2>
+      
+      <h3>Column Management</h3>
+      <table>
+        <thead><tr><th>Feature</th><th>Description</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>Shift Columns</td><td>Drag-drop column reordering via header drag</td><td><span class="tag tag-new">NEW</span></td></tr>
+          <tr><td>Add/Remove Columns</td><td>Right-click header → Column chooser with 40+ available columns</td><td><span class="tag tag-new">NEW</span></td></tr>
+          <tr><td>Column Presets</td><td>Pre-built column sets: Basic, Options, Technical, Full</td><td><span class="tag tag-new">NEW</span></td></tr>
+          <tr><td>Column Width</td><td>Drag column borders to resize, double-click to auto-fit</td><td><span class="tag tag-new">NEW</span></td></tr>
+        </tbody>
+      </table>
+
+      <h3>Available Data Columns (40+)</h3>
+      <div class="feature-grid">
+        <div class="feature-card"><div class="title">📊 Price Data</div><div class="desc">Symbol, LTP, Change, Change%, High, Low, Open, Close, Prev Close, VWAP, Avg Price</div></div>
+        <div class="feature-card"><div class="title">📈 Technical</div><div class="desc">30 SMA, 100 SMA, 200 SMA, SuperTrend, RSI(14), MACD, Bollinger, EMA(20)</div></div>
+        <div class="feature-card"><div class="title">📉 Options/IV</div><div class="desc">IV, IV Rank, IV Percentile, IV 5D avg, Delta, Theta, Gamma, Vega, Synthetic Future</div></div>
+        <div class="feature-card"><div class="title">📋 Volume/OI</div><div class="desc">Volume, Volume Avg, OI, OI Change, OI Change%, Delivery%, Turnover</div></div>
+        <div class="feature-card"><div class="title">📊 Range Data</div><div class="desc">Today H/L, Yesterday H/L, 7D H/L, 1M H/L, 52W H/L, ATR(14)</div></div>
+        <div class="feature-card"><div class="title">⏰ Time-Based</div><div class="desc">Price 30 min ago, Price 1 hr ago, Change from open, Day range %</div></div>
+        <div class="feature-card"><div class="title">🔗 CE/PE Prices</div><div class="desc">ATM CE LTP, ATM PE LTP, ATM CE OI, ATM PE OI, CE Δ, PE Δ</div></div>
+        <div class="feature-card"><div class="title">🎯 Pivot Points</div><div class="desc">PP, S1, S2, S3, R1, R2, R3, Camarilla pivots</div></div>
+      </div>
+
+      <h3>Watchlist Management</h3>
+      <table>
+        <thead><tr><th>Feature</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><strong>🔍 Quick Symbol Search (Ctrl+Space)</strong></td><td>Instant search dialog with tabs: Indices, All F&O Stocks, Recently Viewed. Type-ahead fuzzy matching. Shows LTP + Change inline. <span class="tag tag-showstopper">SHOW-STOPPER</span></td></tr>
+          <tr><td><strong>⚡ Smart Strike Navigator</strong></td><td>In Option Chain: type strike number to jump directly. Arrow keys to move up/down strikes. Click any strike to switch chart context instantly.</td></tr>
+          <tr><td><strong>Custom Named Watchlists</strong></td><td>Create unlimited watchlists with custom names ("Bank Nifty", "IT Stocks", "My Options")</td></tr>
+          <tr><td><strong>Save/Load</strong></td><td>Persist watchlists to localStorage/backend. Auto-restore on login</td></tr>
+          <tr><td><strong>Insert Scrip</strong></td><td>Press <span class="kbd">Insert</span> to add any F&O/Equity/Option contract at cursor position</td></tr>
+          <tr><td><strong>Separator Rows</strong></td><td>Press <span class="kbd">Shift+Enter</span> for visual dividers between groups</td></tr>
+          <tr><td><strong>One-Touch Option Chain</strong></td><td>Click any symbol → instantly see its option chain in right panel</td></tr>
+          <tr><td><strong>Options Watchlist</strong></td><td>Special market watch for index options: CE/PE prices, IV, Greeks, OI at strikes</td></tr>
+          <tr><td><strong>Auto-Expiry Switch</strong></td><td>After expiry, automatically switch option contracts to next expiry</td></tr>
+          <tr><td><strong>Yesterday H/L Columns</strong></td><td>Previous day's high/low alongside today's for gap analysis</td></tr>
+          <tr><td><strong>🎯 1-Click Strike Switch</strong></td><td>Click any CE/PE price in chain → auto-populate order window with that strike + side + lot</td></tr>
+          <tr><td><strong>📌 Pin to Market Watch</strong></td><td>Pin any option strike to market watch for continuous tracking outside chain view</td></tr>
+          <tr><td><strong>🔄 Swap Expiry</strong></td><td>Quick expiry switch without losing current strike selection — preserves context</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Keyboard Shortcuts -->
+    <section id="keyboard">
+      <h2>⌨️ Keyboard Shortcuts — Full ODIN Parity + Enhanced</h2>
+      <table>
+        <thead><tr><th>Key</th><th>Action</th><th>Source</th></tr></thead>
+        <tbody>
+          <tr><td><span class="kbd">F1</span> / <span class="kbd">+</span></td><td>Buy Order Window</td><td>ODIN</td></tr>
+          <tr><td><span class="kbd">F2</span> / <span class="kbd">-</span></td><td>Sell Order Window</td><td>ODIN</td></tr>
+          <tr><td><span class="kbd">F3</span></td><td>Order Book</td><td>ODIN</td></tr>
+          <tr><td><span class="kbd">F5</span></td><td>Refresh All Data</td><td>ODIN</td></tr>
+          <tr><td><span class="kbd">F6</span></td><td>Market Depth (Best 5)</td><td>ODIN</td></tr>
+          <tr><td><span class="kbd">F7</span></td><td>Net Position</td><td>Custom</td></tr>
+          <tr><td><span class="kbd">F8</span></td><td>Trade Book</td><td>ODIN</td></tr>
+          <tr><td><span class="kbd">F9</span></td><td>Toggle Scanner</td><td>Custom</td></tr>
+          <tr><td><span class="kbd">F11</span></td><td>Fullscreen</td><td>ODIN</td></tr>
+          <tr><td><span class="kbd">F12</span></td><td>Settings</td><td>Custom</td></tr>
+          <tr><td><span class="kbd">Alt+F6</span></td><td>P&L View</td><td>ODIN</td></tr>
+          <tr><td><span class="kbd">Shift+F1</span></td><td>Cancel Selected Order</td><td>ODIN</td></tr>
+          <tr><td><span class="kbd">Shift+F2</span></td><td>Modify Selected Order</td><td>ODIN</td></tr>
+          <tr><td><span class="kbd">Shift+F3</span></td><td>Cancel All Pending</td><td>ODIN</td></tr>
+          <tr><td><span class="kbd">↑</span> / <span class="kbd">↓</span></td><td>Navigate rows</td><td>ODIN</td></tr>
+          <tr><td><span class="kbd">Enter</span></td><td>Open Option Chain</td><td>Custom</td></tr>
+          <tr><td><span class="kbd">Insert</span></td><td>Add Scrip Dialog</td><td>ODIN</td></tr>
+          <tr><td><span class="kbd">Delete</span></td><td>Remove Row</td><td>ODIN</td></tr>
+          <tr><td><span class="kbd">Space</span></td><td>Insert Separator</td><td>Custom</td></tr>
+          <tr><td><span class="kbd">C</span></td><td>Chart Popup</td><td>Custom</td></tr>
+          <tr><td><span class="kbd">T</span></td><td>Technical Indicators</td><td>Custom</td></tr>
+          <tr><td><span class="kbd">D</span></td><td>Toggle Theme</td><td>Custom</td></tr>
+          <tr><td><span class="kbd">Ctrl+F</span></td><td>Search</td><td>Universal</td></tr>
+          <tr><td><span class="kbd">Ctrl+1-9</span></td><td>Quick Fire Macros</td><td>Custom</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Order Safety -->
+    <section id="safety">
+      <h2>🛡️ Order Safety — Prevent Manual Errors</h2>
+      <div class="alert alert-danger"><span>🚨</span> Professional-grade order validation prevents costly mistakes. Every order passes through 12 safety checks before execution.</div>
+      
+      <h3>Pre-Trade Safety Checks (12 layers)</h3>
+      <table>
+        <thead><tr><th>#</th><th>Check</th><th>Description</th><th>Type</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Fat Finger Check</td><td>Price deviation >5% from LTP triggers large warning</td><td>Soft block</td></tr>
+          <tr><td>2</td><td>Quantity Limit</td><td>Order qty exceeds max lots setting → reject</td><td>Hard block</td></tr>
+          <tr><td>3</td><td>Order Value Limit</td><td>Notional value exceeds max order value → reject</td><td>Hard block</td></tr>
+          <tr><td>4</td><td>Duplicate Order</td><td>Same symbol + same side within 3 seconds → warning</td><td>Soft block</td></tr>
+          <tr><td>5</td><td>Freeze Quantity</td><td>Qty exceeds exchange freeze limit → split or warn</td><td>Hard block</td></tr>
+          <tr><td>6</td><td>Banned Script</td><td>Symbol in F&O ban period → block order</td><td>Hard block</td></tr>
+          <tr><td>7</td><td>Circuit Limit</td><td>Price near upper/lower circuit → alert + warn</td><td>Soft block</td></tr>
+          <tr><td>8</td><td>Margin Check</td><td>Insufficient margin with buffer% → reject</td><td>Hard block</td></tr>
+          <tr><td>9</td><td>M2M Kill Switch</td><td>Day loss exceeds kill switch threshold → block all</td><td>Hard block</td></tr>
+          <tr><td>10</td><td>Orders/Minute</td><td>Exceeds max orders per minute → throttle</td><td>Hard block</td></tr>
+          <tr><td>11</td><td>Market Hours</td><td>Order placed outside market hours → confirm</td><td>Soft block</td></tr>
+          <tr><td>12</td><td>Expiry Check</td><td>Option expiring today + time >15:00 → urgent warning</td><td>Soft block</td></tr>
+        </tbody>
+      </table>
+
+      <h3>AI Order Highlights</h3>
+      <p>At the time of placing an order, AI highlights relevant intelligence:</p>
+      <div class="feature-grid">
+        <div class="feature-card"><div class="icon">⚠️</div><div class="title">High IV Warning</div><div class="desc">IV > 40 or IV Rank > 80% — premium is expensive</div></div>
+        <div class="feature-card"><div class="icon">⏰</div><div class="title">Near Expiry</div><div class="desc">DTE < 3 days — rapid theta decay active</div></div>
+        <div class="feature-card"><div class="icon">📊</div><div class="title">OI Buildup</div><div class="desc">OI change > 10% intraday at this strike</div></div>
+        <div class="feature-card"><div class="icon">🎯</div><div class="title">Max Pain Gap</div><div class="desc">Strike is 200+ points from max pain level</div></div>
+      </div>
+    </section>
+
+    <!-- Order Message Bar & Trade Book -->
+    <section id="orders">
+      <h2>📝 Order System — Message Bar + Trade Book</h2>
+      <h3>📢 Message Bar (Always Visible)</h3>
+      <div class="alert alert-info"><span>💡</span> Scrolling notification strip at screen bottom — real-time order fills, rejections, pending status. Every manual trader relies on this.</div>
+      <table>
+        <thead><tr><th>Feature</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><strong>🟢 Trade Confirmations</strong></td><td>Last 10 trade fills — symbol, side, qty, price, time. Green flash buy, red sell</td></tr>
+          <tr><td><strong>🔴 Rejections</strong></td><td>Last 10 rejected orders with reason code — red flash + voice alert</td></tr>
+          <tr><td><strong>🟡 Pending Orders</strong></td><td>10 pending orders with live status (Open, Partial, Triggered)</td></tr>
+          <tr><td><strong>🔊 Sound + Voice</strong></td><td>Ascending tone buy, descending sell, buzz rejection. Voice reads symbol+price</td></tr>
+        </tbody>
+      </table>
+      <h3>💰 Position & M2M System (3-Layer Real-Time)</h3>
+      <div class="alert alert-warning"><span>📊</span> <strong>Critical:</strong> Three M2M calculations for different analytical needs. All compute in real-time.</div>
+      <table>
+        <thead><tr><th>M2M Type</th><th>Description</th><th>Calculation</th></tr></thead>
+        <tbody>
+          <tr><td><strong>📈 Intraday M2M</strong></td><td>Today's intraday only trades</td><td>(Exit - Entry) × Qty for today's closed trades</td></tr>
+          <tr><td><strong>📊 Today's M2M</strong></td><td>All open positions vs yesterday close</td><td>(LTP - Yesterday Close) × Qty for all open</td></tr>
+          <tr><td><strong>📅 Expiry M2M</strong></td><td>Monthly series: start of month to date</td><td>All realized + unrealized since series start</td></tr>
+        </tbody>
+      </table>
+      <h3>🌙 Overnight Positions</h3>
+      <table>
+        <thead><tr><th>Feature</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Carry Forward Flag</strong></td><td>Orange dot for overnight positions. Gap P&L: (Today Open - Yest Close) × Qty</td></tr>
+          <tr><td><strong>Days Held + Avg Theta</strong></td><td>Days open + average theta decay per day for options</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- AI Agents -->
+    <section id="ai">
+      <h2>🤖 AI Agent Layer — 7 Specialized Agents</h2>
+      <div class="alert alert-success"><span>✅</span> Each AI agent runs independently and can be toggled ON/OFF from Settings → AI tab. Alerts delivered via Toast + Voice + Sound.</div>
+      
+      <div class="feature-grid">
+        <div class="feature-card"><div class="icon">🎯</div><div class="title">Position Monitor Agent</div><div class="desc">Tracks net delta, gamma, theta, vega exposure. Alerts on Greek imbalance or excessive directional risk.</div><span class="tag tag-ai">AI</span></div>
+        <div class="feature-card"><div class="icon">💰</div><div class="title">M2M Analyzer Agent</div><div class="desc">Real-time MTM P&L tracking. Configurable alerts at -5K, -10K, -20K thresholds. Auto kill-switch integration.</div><span class="tag tag-ai">AI</span></div>
+        <div class="feature-card"><div class="icon">📰</div><div class="title">News Analyzer Agent</div><div class="desc">RSS/API news monitor. Stock/sector/market news with sentiment tagging (bullish/bearish/neutral).</div><span class="tag tag-ai">AI</span></div>
+        <div class="feature-card"><div class="icon">📊</div><div class="title">Market Scanner Agent</div><div class="desc">Full 220-symbol universe scan. 20+ filter presets. Independent thread, doesn't affect UI performance.</div><span class="tag tag-ai">AI</span></div>
+        <div class="feature-card"><div class="icon">📈</div><div class="title">Volatility Monitor</div><div class="desc">IV crush detection, VIX spike correlation, IV rank/percentile tracking per symbol.</div><span class="tag tag-ai">AI</span></div>
+        <div class="feature-card"><div class="icon">✅</div><div class="title">Order Validator Agent</div><div class="desc">12-layer pre-trade validation: margin, lot size, banned scripts, freeze qty, circuit limits, fat finger.</div><span class="tag tag-ai">AI</span></div>
+        <div class="feature-card"><div class="icon">📉</div><div class="title">Trend Analyzer Agent</div><div class="desc">SuperTrend/SMA cross/RSI/MACD/ADR signals. Natural language trend summary like Sahi AI.</div><span class="tag tag-ai">AI</span></div>
+      </div>
+    </section>
+
+    <!-- 3FA Security Architecture -->
+    <section id="security">
+      <h2>🔐 3FA Authentication & Security Layer</h2>
+      <div class="alert alert-warning">
+        <span>🛡️</span> <strong>Institutional-Grade Security:</strong> 3-Factor Authentication is mandatory for all trading terminals handling real money. No single point of auth failure.
+      </div>
+
+      <h3>Authentication Flow — 3 Layers</h3>
+      <table>
+        <thead><tr><th>Step</th><th>Factor</th><th>Method</th><th>Validation</th><th>Lockout</th></tr></thead>
+        <tbody>
+          <tr><td><strong>1️⃣</strong></td><td>Knowledge</td><td>UserID + Password</td><td>Shield Engine JWT (port 3000)</td><td>5 failed → 15min lock</td></tr>
+          <tr><td><strong>2️⃣</strong></td><td>Secret PIN</td><td>6-digit numeric PIN</td><td>AES-256 encrypted local + server verify</td><td>3 failed → OTP required</td></tr>
+          <tr><td><strong>3️⃣</strong></td><td>Possession</td><td>OTP / MPIN</td><td>TOTP (Google Auth) or SMS OTP or biometric MPIN</td><td>3 failed → account lock</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Alternative Login Methods</h3>
+      <div class="feature-grid">
+        <div class="feature-card"><div class="icon">📱</div><div class="title">QR Code Login</div><div class="desc">Generate session QR → scan from TalkOptions/TalkDelta mobile app → WebSocket handshake → auto-login. QR expires in 60 seconds.</div><span class="tag tag-new">SSO</span></div>
+        <div class="feature-card"><div class="icon">🔗</div><div class="title">Single Sign-On (SSO)</div><div class="desc">Login with TalkOptions or TalkDelta credentials. Shared Shield auth server issues cross-product JWT tokens.</div><span class="tag tag-new">SSO</span></div>
+        <div class="feature-card"><div class="icon">💾</div><div class="title">Remember Device</div><div class="desc">Device fingerprint (userAgent + screen + timezone) stored as hash. Trusted devices skip PIN for 30 days.</div><span class="tag tag-new">UX</span></div>
+        <div class="feature-card"><div class="icon">🔄</div><div class="title">Auto-Refresh Session</div><div class="desc">JWT auto-refreshes 5min before expiry. Session lasts 24hrs. Graceful re-auth on token expiry.</div><span class="tag tag-new">SECURITY</span></div>
+      </div>
+
+      <h3>Engine Credential Settings</h3>
+      <table>
+        <thead><tr><th>Service</th><th>Credentials</th><th>Storage</th><th>Encryption</th></tr></thead>
+        <tbody>
+          <tr><td>Shield Auth</td><td>URL + UserID + Password</td><td>Settings Panel → Encrypted localStorage</td><td>AES-256-GCM</td></tr>
+          <tr><td>TalkOptions</td><td>UserName + Password + x-bypass header</td><td>Settings Panel → Encrypted localStorage</td><td>AES-256-GCM</td></tr>
+          <tr><td>TalkDelta</td><td>API Key + Secret + Server URL</td><td>Settings Panel → Encrypted localStorage</td><td>AES-256-GCM</td></tr>
+          <tr><td>Broker (XTS/Dhan)</td><td>API Key + Secret</td><td>Settings Panel → Encrypted, Masked display</td><td>AES-256-GCM</td></tr>
+          <tr><td>Ganesh OHLC</td><td>UserName + Password + x-bypass</td><td>Settings Panel → Encrypted localStorage</td><td>AES-256-GCM</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- TalkOptions Integration -->
+    <section id="talkoptions">
+      <h2>🧠 TalkOptions Integration — Options Intelligence</h2>
+      <div class="alert alert-info">
+        <span>🏢</span> <strong>Our Own Product:</strong> TalkOptions server runs in the SAME environment. Zero latency, unlimited API calls, full data access. No rate limits.
+      </div>
+
+      <h3>13 API Endpoints Available</h3>
+      <table>
+        <thead><tr><th>API</th><th>Endpoint</th><th>Theta Yantra Usage</th><th>Panel/View</th></tr></thead>
+        <tbody>
+          <tr><td>Option Chain</td><td><code>/api/OptionChain</code></td><td>Full chain: Strike, IV, OI, Greeks, Buildup</td><td>Chain Popup, Chain Panel</td></tr>
+          <tr><td>OI Analysis</td><td><code>/api/OI</code></td><td>OI change, concentration</td><td>OI Analysis Panel</td></tr>
+          <tr><td>PCR</td><td><code>/api/PCR</code></td><td>Put-Call Ratio sentiment</td><td>ATM Panel, AI Panel</td></tr>
+          <tr><td>Max Pain</td><td><code>/api/MaxPain</code></td><td>Max Pain levels per expiry</td><td>Options Trader View</td></tr>
+          <tr><td>IV Rank</td><td><code>/api/IVRank</code></td><td>IV Rank & Percentile</td><td>IV Analysis View</td></tr>
+          <tr><td>IV Screener</td><td><code>/api/IVScreener</code></td><td>Top IV instruments</td><td>IV Screener sidebar</td></tr>
+          <tr><td>IV Skew</td><td><code>/api/IVSkew</code></td><td>Strike-wise IV skew</td><td>IV Skew chart</td></tr>
+          <tr><td>IV History</td><td><code>/api/IVHistory</code></td><td>30/90/365 day IV chart</td><td>IV History chart</td></tr>
+          <tr><td>Intraday Buildup</td><td><code>/api/IntradayBuildup</code></td><td>Intraday OI buildup</td><td>OI Panel, Scanner</td></tr>
+          <tr><td>MMI</td><td><code>/api/MMI</code></td><td>Market Mood Index</td><td>Status Bar, AI Panel</td></tr>
+          <tr><td>Greeks</td><td><code>/api/Greeks</code></td><td>Per-option Greeks</td><td>Strategy Builder</td></tr>
+          <tr><td>Expiries</td><td><code>/api/Expiries</code></td><td>Available expiry dates</td><td>Auto-expiry switch</td></tr>
+          <tr><td>Lot Size</td><td><code>/api/LotSize</code></td><td>Official lot sizes</td><td>Order Window, Grid</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Data Flow: TalkOptions → Theta Yantra</h3>
+      <div class="alert alert-info">
+        <span>🔄</span> <strong>Primary path:</strong> TalkOptions API → Garuda Engine (port 3011) → Theta Yantra. <strong>Fallback:</strong> Direct TalkOptions API if Garuda unavailable.
+      </div>
+    </section>
+
+    <!-- TalkDelta Integration -->
+    <section id="talkdelta">
+      <h2>📡 TalkDelta Integration — Live Feed & Post-Trade Analytics</h2>
+      <div class="alert alert-info">
+        <span>🏢</span> <strong>Our Own Product:</strong> TalkDelta provides the live market data feed (IBT/UDP) and post-trade portfolio analytics.
+      </div>
+
+      <h3>Integration Capabilities</h3>
+      <div class="feature-grid">
+        <div class="feature-card"><div class="icon">📺</div><div class="title">Live Feed (IBT/UDP)</div><div class="desc">Real-time NSE/BSE ticks via IBT WebSocket or UDP multicast. Feeds Lakshmi engine. Replaces mock tick data.</div><span class="tag tag-new">LIVE</span></div>
+        <div class="feature-card"><div class="icon">💼</div><div class="title">Portfolio Analysis</div><div class="desc">Post-trade P&L breakdown: strategy-wise, day-wise, symbol-wise. Greeks exposure, margin utilization.</div><span class="tag tag-new">ANALYTICS</span></div>
+        <div class="feature-card"><div class="icon">📊</div><div class="title">Risk Metrics</div><div class="desc">Aggregated Greeks (net delta, gamma, theta, vega), VAR analysis, portfolio heat.</div><span class="tag tag-new">RISK</span></div>
+        <div class="feature-card"><div class="icon">📋</div><div class="title">Trade Reports</div><div class="desc">Daily/weekly/monthly trade reports. Auto-feed Trade Journal with real trade data.</div><span class="tag tag-new">REPORTS</span></div>
+      </div>
+
+      <h3>Cross-Product Ecosystem Synergy</h3>
+      <table>
+        <thead><tr><th>Flow</th><th>From</th><th>To</th><th>Data</th></tr></thead>
+        <tbody>
+          <tr><td>IV Intelligence</td><td>TalkOptions</td><td>Theta Yantra</td><td>Chain, Greeks, OI, IV Rank, MaxPain</td></tr>
+          <tr><td>Live Feed</td><td>TalkDelta</td><td>Theta Yantra</td><td>Real-time LTP, tick stream, volume</td></tr>
+          <tr><td>Portfolio</td><td>TalkDelta</td><td>Theta Yantra</td><td>P&L, positions, risk metrics</td></tr>
+          <tr><td>Order Flow</td><td>Theta Yantra</td><td>TalkDelta</td><td>Fills, positions (for portfolio sync)</td></tr>
+          <tr><td>Pro Terminal</td><td>Theta Yantra</td><td>TalkOptions Users</td><td>Trading UI embedded in TalkOptions</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Engines -->
+    <section id="engines">
+      <h2>⚙️ AlgoEngines Integration — 7 Core Engines</h2>
+      <table>
+        <thead><tr><th>Engine</th><th>Port</th><th>Purpose</th><th>Data Provided</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Shield</strong></td><td>3000</td><td>Auth/JWT</td><td>Authentication tokens, session management</td></tr>
+          <tr><td><strong>Surya</strong></td><td>3001</td><td>Universe/BOD</td><td>Contract master, lot sizes, expiries, banned list</td></tr>
+          <tr><td><strong>Ganesh</strong></td><td>3002</td><td>OHLC/History</td><td>Historical candles, SMA, technical indicators</td></tr>
+          <tr><td><strong>Lakshmi</strong></td><td>3003</td><td>Live LTP</td><td>Real-time tick data, WebSocket streaming</td></tr>
+          <tr><td><strong>Vega</strong></td><td>3007</td><td>Order Execution</td><td>Order routing, fill reports, position updates</td></tr>
+          <tr><td><strong>Garuda</strong></td><td>3011</td><td>Options Chain/IV</td><td>Full chain, Greeks, OI, MaxPain, IV rank</td></tr>
+          <tr><td><strong>TalkOptions</strong></td><td>local</td><td>IV Intelligence</td><td>Premium IV data, OI buildup, PCR</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- PWA -->
+    <section id="pwa">
+      <h2>💻 Desktop App — PWA (Progressive Web App)</h2>
+      <p>Theta Yantra installs as a native desktop app directly from the browser — no app store required.</p>
+      <div class="feature-grid">
+        <div class="feature-card"><div class="icon">📱</div><div class="title">Install from Browser</div><div class="desc">Chrome/Edge "Install App" button. Launches in standalone window without browser chrome.</div></div>
+        <div class="feature-card"><div class="icon">⚡</div><div class="title">Instant Load</div><div class="desc">Service Worker caches all static assets. App loads in < 1 second even on slow network.</div></div>
+        <div class="feature-card"><div class="icon">🔔</div><div class="title">System Notifications</div><div class="desc">OS-level push notifications for price alerts, order fills, M2M breaches.</div></div>
+        <div class="feature-card"><div class="icon">💾</div><div class="title">Offline Settings</div><div class="desc">Watchlists, layouts, preferences persist in IndexedDB. Available even offline.</div></div>
+      </div>
+    </section>
+
+    <!-- 10 Smart Features -->
+    <section id="future">
+      <h2>🔮 10 Smart Innovation Features (Beyond Competition)</h2>
+      <div class="feature-grid">
+        <div class="feature-card"><div class="icon">🗺️</div><div class="title">1. Market Heatmap</div><div class="desc">Sector-wise color-coded treemap showing relative performance. Size = market cap, color = change%.</div><span class="tag tag-new">INNOVATION</span></div>
+        <div class="feature-card"><div class="icon">🔄</div><div class="title">2. Correlation Matrix</div><div class="desc">Visual correlation between instruments. Identify pairs, hedges, and portfolio risks instantly.</div><span class="tag tag-new">INNOVATION</span></div>
+        <div class="feature-card"><div class="icon">📊</div><div class="title">3. VWAP Tracker</div><div class="desc">Real-time VWAP with deviation bands. Institutional-grade volume-weighted execution benchmarking.</div><span class="tag tag-new">INNOVATION</span></div>
+        <div class="feature-card"><div class="icon">📝</div><div class="title">4. Trade Journal</div><div class="desc">Auto-logged trade journal with P&L analytics, win rate, avg hold time, strategy-wise breakdown.</div><span class="tag tag-new">INNOVATION</span></div>
+        <div class="feature-card"><div class="icon">🏛️</div><div class="title">5. FII/DII Activity Tracker</div><div class="desc">Real-time FII/DII buy/sell data with historical charts. Sentiment indicator for institutional flow.</div><span class="tag tag-new">INNOVATION</span></div>
+        <div class="feature-card"><div class="icon">📐</div><div class="title">6. Order Flow Imbalance</div><div class="desc">Bid-ask imbalance indicator showing buying/selling pressure. Professional market microstructure tool.</div><span class="tag tag-new">INNOVATION</span></div>
+        <div class="feature-card"><div class="icon">🕐</div><div class="title">7. Pre/Post Market Data</div><div class="desc">Pre-market session data (9:00-9:15), post-market auction summary. Gap analysis tools.</div><span class="tag tag-new">INNOVATION</span></div>
+        <div class="feature-card"><div class="icon">🎨</div><div class="title">8. Pattern Recognition</div><div class="desc">AI-powered candlestick pattern detection: Doji, Engulfing, Hammer, Head & Shoulders. Auto-annotate charts.</div><span class="tag tag-ai">AI</span></div>
+        <div class="feature-card"><div class="icon">🔗</div><div class="title">9. TradingView Connect</div><div class="desc">Link your TradingView account for premium charts. Embed TV Advanced Charts widget with own data feed.</div><span class="tag tag-new">INNOVATION</span></div>
+        <div class="feature-card"><div class="icon">🎵</div><div class="title">10. Sonic Trade Indicator</div><div class="desc">Different sound tones for buy fills vs sell fills. Musical scale for profit levels. Audio market pulse.</div><span class="tag tag-new">INNOVATION</span></div>
+      </div>
+      
+      <div class="alert alert-warning">
+        <span>📦</span> <strong>Extensibility:</strong> The architecture is designed for 100+ future data columns. Every new data field from AlgoEngines can be added as a toggleable column in Market Watch without code changes — just config.
+      </div>
+    </section>
+
+    <!-- Sprint Plan -->
+    <section id="sprints">
+      <h2>🚀 Sprint Execution Plan</h2>
+      <div class="timeline">
+        <div class="timeline-item done"><div class="sprint-content"><div class="sprint-label">Sprint 1 ✅</div><div class="sprint-title">Foundation — Market Grid + Quick Fire + Option Chain</div><div class="sprint-desc">177 symbols, 18 columns, sector filters, keyboard shortcuts, chart popups, technical indicators</div></div></div>
+        <div class="timeline-item done"><div class="sprint-content"><div class="sprint-label">Sprint 2 ✅</div><div class="sprint-title">Advanced Features — Synthetic Futures + Order Window + Scanner</div><div class="sprint-desc">AI-enhanced order screen, bracket orders, trailing SL, scanner sidebar, settings panel, voice alerts</div></div></div>
+        <div class="timeline-item done"><div class="sprint-content"><div class="sprint-label">Sprint 3 ✅</div><div class="sprint-title">3-Panel Architecture — AppShell + Views + Right Sidebar</div><div class="sprint-desc">Left NavBar, 8 views, 9 right panels, Options Trader view, Stocks view, Market Watch multi-chart grid</div></div></div>
+        <div class="timeline-item done"><div class="sprint-content"><div class="sprint-label">Sprint 4 ✅</div><div class="sprint-title">Intelligence Layer — AI Panels + OI Analysis + ATM Analysis</div><div class="sprint-desc">AI Analysis panel, OI bar/change charts, ATM IV/Straddle charts, Positions/Orders panels, Message Bar</div></div></div>
+        <div class="timeline-item done"><div class="sprint-content"><div class="sprint-label">Sprint 5 ✅</div><div class="sprint-title">UX Pro — Order Safety + Voice Alerts + Quick Search</div><div class="sprint-desc">12-layer order validation, toast notifications, Ctrl+Space search, 3-type M2M tracking</div></div></div>
+        <div class="timeline-item done"><div class="sprint-content"><div class="sprint-label">Sprint 6 ✅</div><div class="sprint-title">Advanced Views — Scalper + IV + Strategy + Custom Layout</div><div class="sprint-desc">4 new views, column management, Yesterday H/L, watchlist CRUD, auto-expiry switch</div></div></div>
+        <div class="timeline-item done"><div class="sprint-content"><div class="sprint-label">Sprint 7 ✅</div><div class="sprint-title">PWA + Innovation — Heatmap + Trade Journal</div><div class="sprint-desc">PWA manifest, service worker, market heatmap panel, trade journal with P&L analytics</div></div></div>
+        <div class="timeline-item done"><div class="sprint-content"><div class="sprint-label">Sprint 8 ✅</div><div class="sprint-title">3FA Security — Authentication + Engine Credentials</div><div class="sprint-desc">UserID/Password → 6-digit PIN → OTP/MPIN. QR login, SSO with TalkOptions/TalkDelta, encrypted settings</div></div></div>
+        <div class="timeline-item done"><div class="sprint-content"><div class="sprint-label">Sprint 9 ✅</div><div class="sprint-title">TalkOptions Integration — 13 API Endpoints</div><div class="sprint-desc">Real IV data, option chain, Greeks, OI analysis, MaxPain, IV Screener/Rank/Skew/History from our own server</div></div></div>
+        <div class="timeline-item done"><div class="sprint-content"><div class="sprint-label">Sprint 10 ✅</div><div class="sprint-title">TalkDelta Integration — Live Feed + Portfolio Analytics</div><div class="sprint-desc">IBT/UDP real-time ticks via Lakshmi, post-trade P&L, risk metrics, trade reports</div></div></div>
+        <div class="timeline-item done"><div class="sprint-content"><div class="sprint-label">Sprint 11 ✅</div><div class="sprint-title">Engine Handshake — Live AlgoEngines Connection</div><div class="sprint-desc">Shield JWT auth, 7-engine health monitoring, WebSocket tick stream, OHLC polling, order routing via Vega</div></div></div>
+        <div class="timeline-item done"><div class="sprint-content"><div class="sprint-label">Sprint 12 ✅</div><div class="sprint-title">Innovation Completion — 8 Advanced Panels</div><div class="sprint-desc">Correlation Matrix, VWAP, FII/DII, Order Flow, Pre/Post Market, Pattern Recognition, Market Intel</div></div></div>
+        <div class="timeline-item done"><div class="sprint-content"><div class="sprint-label">Sprint 13 ✅</div><div class="sprint-title">Charts + QFM + Settings — Production-grade Upgrade</div><div class="sprint-desc">TradingView OHLC/HA charts, Heikin Ashi AI alerts, 15 QFM macros, 10-tab ODIN+ settings, BRS docs</div></div></div>
+        <div class="timeline-item active"><div class="sprint-content"><div class="sprint-label">Sprint 14 🔄</div><div class="sprint-title">Backend Bootstrap — Node.js + Fastify + PostgreSQL</div><div class="sprint-desc">Project scaffold, config, DB schema, Shield JWT auth bridge, health endpoints, Redis connection</div></div></div>
+        <div class="timeline-item"><div class="sprint-content"><div class="sprint-label">Sprint 15</div><div class="sprint-title">Real-time Data Bridge — Lakshmi + Ganesh + Socket.io</div><div class="sprint-desc">WebSocket tick stream from Lakshmi, OHLC polling from Ganesh, LTP broadcast to frontend, feed failover</div></div></div>
+        <div class="timeline-item"><div class="sprint-content"><div class="sprint-label">Sprint 16</div><div class="sprint-title">Options Intelligence — Garuda + TalkOptions Proxy</div><div class="sprint-desc">Option chain API, IV/Greeks feed, OI analysis, Smart Strike Picker, Delta mapping</div></div></div>
+        <div class="timeline-item"><div class="sprint-content"><div class="sprint-label">Sprint 17</div><div class="sprint-title">Order Execution — Vega + Kavach Integration</div><div class="sprint-desc">Order routing via Vega, bracket order management, kill switch via Kavach, RMS validation</div></div></div>
+        <div class="timeline-item"><div class="sprint-content"><div class="sprint-label">Sprint 18</div><div class="sprint-title">OMS/RMS Hardening — Position Tracking + M2M + Auto Square-off</div><div class="sprint-desc">Real-time P&L, position book, trade book, auto square-off, margin tracking, risk alerts</div></div></div>
+        <div class="timeline-item"><div class="sprint-content"><div class="sprint-label">Sprint 19</div><div class="sprint-title">Production Go-Live — Load test + Deploy + Monitor</div><div class="sprint-desc">Artillery load tests, Cloudflare deployment, observability, alert integration, final UAT</div></div></div>
+      </div>
+    </section>
+
+    <!-- ==================== OHLC & HA CHARTS ==================== -->
+    <section id="charts">
+      <h2>📈 Professional Charts — TradingView lightweight-charts</h2>
+      <p>Institutional-grade candlestick charting powered by TradingView's <code>lightweight-charts</code> v5.1.0 — 60fps Canvas rendering, <50KB bundle size.</p>
+
+      <h3>Chart Types</h3>
+      <table>
+        <tr><th>Type</th><th>Icon</th><th>Description</th><th>Best For</th></tr>
+        <tr><td>Candlestick (OHLC)</td><td>🕯️</td><td>Standard green/red candles with wicks</td><td>Default analysis</td></tr>
+        <tr><td>Heikin Ashi</td><td>🔮 HA</td><td>Averaged candles: Close=(O+H+L+C)/4, Open=(prevO+prevC)/2</td><td>Trend identification</td></tr>
+        <tr><td>Line</td><td>📈</td><td>Simple close-price line</td><td>Quick overview</td></tr>
+        <tr><td>Area</td><td>📊</td><td>Filled gradient under close line</td><td>Visual appeal</td></tr>
+      </table>
+
+      <h3>Timeframes</h3>
+      <p>1m | 3m | 5m | 15m | 1h | 1d — selectable from chart toolbar</p>
+
+      <h3>Overlays (Toggle On/Off)</h3>
+      <table>
+        <tr><th>Overlay</th><th>Color</th><th>Purpose</th></tr>
+        <tr><td>SMA 30</td><td style="color:#f59e0b">Amber</td><td>Short-term trend (default ON)</td></tr>
+        <tr><td>SMA 100</td><td style="color:#8b5cf6">Purple</td><td>Medium-term bias</td></tr>
+        <tr><td>SMA 200</td><td style="color:#ec4899">Pink</td><td>Long-term support/resistance</td></tr>
+        <tr><td>EMA 9</td><td style="color:#22d3ee">Cyan dashed</td><td>Scalping fast signal</td></tr>
+        <tr><td>EMA 21</td><td style="color:#a78bfa">Violet dashed</td><td>Trend confirmation</td></tr>
+        <tr><td>Bollinger Bands</td><td style="color:#8b5cf6">Violet bands</td><td>Volatility range (20,2σ)</td></tr>
+        <tr><td>Volume</td><td>Green/Red histogram</td><td>Volume below chart</td></tr>
+      </table>
+
+      <h3>Chart Locations</h3>
+      <div class="feature-grid">
+        <div class="feature-card"><div class="icon">📊</div><div class="title">Chart Popup</div><div class="desc">800×500 modal — <code>C</code> key or 📊 icon. Full OHLC + HA toggle + all overlays.</div><span class="tag tag-enhanced">UPGRADED</span></div>
+        <div class="feature-card"><div class="icon">⚡</div><div class="title">Scalper View</div><div class="desc">Dual embedded charts — top: OHLC candlestick, bottom: Heikin Ashi. Side: Depth + Quick Scalp.</div><span class="tag tag-enhanced">UPGRADED</span></div>
+        <div class="feature-card"><div class="icon">🔮</div><div class="title">Heikin Ashi Panel</div><div class="desc">Dedicated sidebar panel with embedded HA chart + AI color-change alerts.</div><span class="tag tag-new">NEW</span></div>
+      </div>
+
+      <h4>Component: CandlestickChart.jsx</h4>
+      <div class="arch-box">Props:
+  symbol: string      — Symbol name (NIFTY, BANKNIFTY, etc.)
+  height: number      — Chart height in pixels (default: 400)
+  chartType: string   — 'candlestick' | 'heikinashi' | 'line' | 'area'
+  showToolbar: bool   — Show/hide chart type + timeframe + overlay buttons
+  showOverlays: bool  — Enable overlay toggles
+  compact: bool       — Compact mode for embedded usage
+
+Data Source:
+  Currently: Simulated OHLC via generateOHLC() with symbol-seeded randomization
+  Backend:   Ganesh Engine API → /api/Broadcast/GetOHLC (port 3002)</div>
+    </section>
+
+    <!-- ==================== HEIKIN ASHI AI ==================== -->
+    <section id="heikinashi">
+      <h2>🔮 Heikin Ashi AI — Color-Change Alert System</h2>
+      <p>AI-powered trade signal generation from Heikin Ashi chart color transitions. Identifies trend reversals with automated stop-loss computation and confidence scoring.</p>
+
+      <h3>Signal Detection Algorithm</h3>
+      <div class="arch-box">SIGNAL: Color Change Detection (5-min chart)
+
+When 5-min HA flips from RED → GREEN:
+  → Generate BUY alert
+  → SL = min(low of last 3 red candles)
+  → Confidence = 50 + (consecutive_greens × 10) + (no_lower_wick ? 15 : 0)
+  → "STRONG BUY" if 3+ consecutive green with no lower wick
+
+When 5-min HA flips from GREEN → RED:
+  → Generate SELL alert
+  → SL = max(high of last 3 green candles)
+  → Confidence = 50 + (consecutive_reds × 10) + (no_upper_wick ? 15 : 0)
+  → "STRONG SELL" if 3+ consecutive red with no upper wick</div>
+
+      <h3>Panel Layout</h3>
+      <div class="arch-box">┌────────────────────────────────────────┐
+│ 🔮 HEIKIN ASHI AI      [5m▼] [15m]   │
+├────────────────────────────────────────┤
+│ [NIFTY] [BANKNIFTY] [FINNIFTY] [SBIN] │
+│                                        │
+│ [Embedded HA candlestick chart 180px]  │
+│ with EMA 9 (cyan) / 21 (violet)       │
+│ BUY/SELL arrow markers on signals      │
+│                                        │
+│ ═══ AI COLOR ALERTS ═══               │
+│ 🟢 NIFTY — STRONG BUY   10:15        │
+│   Entry: ₹24935  SL: ₹24868  85%     │
+│ 🔴 NIFTY — SELL signal   10:30        │
+│   Entry: ₹24808  SL: ₹24932  60%     │
+│                                        │
+│ ─── AUTO SL STUDY ───                 │
+│ Win Rate: 67%   Last 6: 2W / 4L      │
+│ [████████░░░] 33% bar                 │
+└────────────────────────────────────────┘</div>
+
+      <h3>Win Rate Tracker</h3>
+      <p>Backtests last N signals by checking if price moved in predicted direction after 5 bars. Displays: win count, loss count, win rate percentage, and visual progress bar.</p>
+    </section>
+
+    <!-- ==================== BRS DOCUMENT ==================== -->
+    <section id="brs">
+      <h2>📋 Business Requirements Specification (BRS)</h2>
+      <p>Full BRS for SRE Theta Yantra — the institutional-grade professional NSE F&O manual trading terminal.</p>
+
+      <h3>1. Product Overview</h3>
+      <table>
+        <tr><th>Attribute</th><th>Value</th></tr>
+        <tr><td>Product Name</td><td>SRE Theta Yantra</td></tr>
+        <tr><td>Type</td><td>Web-based Professional Trading Terminal (NSE F&O)</td></tr>
+        <tr><td>Target Users</td><td>Professional options traders, proprietary desks</td></tr>
+        <tr><td>Competitor Benchmark</td><td>ODIN, DIET, GETS, Dhan, Bloomberg Terminal</td></tr>
+        <tr><td>Architecture</td><td>React+Vite (Cloudflare) → Node.js+Fastify (Backend) → AlgoEngines (21 Workers)</td></tr>
+        <tr><td>Deployment</td><td>Frontend: Cloudflare Pages | Backend: AlgoEngines Server</td></tr>
+        <tr><td>Data Sources</td><td>TalkOptions (IV/Greeks), TalkDelta (Live Feed), Ganesh (OHLC), Garuda (OptionChain)</td></tr>
+      </table>
+
+      <h3>2. Functional Requirements</h3>
+      <h4>FR-1: Market Data Display</h4>
+      <table>
+        <tr><th>Req ID</th><th>Description</th><th>Priority</th><th>Status</th></tr>
+        <tr><td>FR-1.1</td><td>Display ~220 NSE F&O symbols with real-time LTP</td><td>P0</td><td>✅ Frontend</td></tr>
+        <tr><td>FR-1.2</td><td>25+ columns: LTP, Change%, High, Low, Volume, OI, SMAs, IV, Delta</td><td>P0</td><td>✅ Frontend</td></tr>
+        <tr><td>FR-1.3</td><td>Sector filtering (11 sectors) + Movement filtering (6 ranges)</td><td>P0</td><td>✅ Frontend</td></tr>
+        <tr><td>FR-1.4</td><td>SMA bias indicator (green/red left border based on 30 SMA)</td><td>P1</td><td>✅ Frontend</td></tr>
+        <tr><td>FR-1.5</td><td>IV 5D range scoring + pulse highlighting</td><td>P1</td><td>✅ Frontend</td></tr>
+        <tr><td>FR-1.6</td><td>Flash animation on price tick updates</td><td>P2</td><td>✅ Frontend</td></tr>
+      </table>
+
+      <h4>FR-2: Option Chain</h4>
+      <table>
+        <tr><th>Req ID</th><th>Description</th><th>Priority</th><th>Status</th></tr>
+        <tr><td>FR-2.1</td><td>Full chain: OI, IV, Delta, LTP, Buildup for Calls & Puts</td><td>P0</td><td>✅ Frontend</td></tr>
+        <tr><td>FR-2.2</td><td>ATM highlighting (yellow) + 0.1Δ rows (cyan)</td><td>P0</td><td>✅ Frontend</td></tr>
+        <tr><td>FR-2.3</td><td>One-click trade from any chain cell</td><td>P0</td><td>✅ Frontend</td></tr>
+        <tr><td>FR-2.4</td><td>Multi-expiry switching</td><td>P1</td><td>✅ Frontend</td></tr>
+      </table>
+
+      <h4>FR-3: Order Management</h4>
+      <table>
+        <tr><th>Req ID</th><th>Description</th><th>Priority</th><th>Status</th></tr>
+        <tr><td>FR-3.1</td><td>Buy (F1) / Sell (F2) order entry windows</td><td>P0</td><td>✅ Frontend</td></tr>
+        <tr><td>FR-3.2</td><td>Order types: MKT, LMT, SL, SL-M</td><td>P0</td><td>✅ Frontend</td></tr>
+        <tr><td>FR-3.3</td><td>Products: MIS, NRML, CNC</td><td>P0</td><td>✅ Frontend</td></tr>
+        <tr><td>FR-3.4</td><td>Bracket orders: Entry + SL + Target</td><td>P0</td><td>✅ Frontend</td></tr>
+        <tr><td>FR-3.5</td><td>Trailing SL with configurable step</td><td>P1</td><td>✅ Frontend</td></tr>
+        <tr><td>FR-3.6</td><td>Breakeven SL (auto-move to entry after X pts profit)</td><td>P1</td><td>✅ Frontend</td></tr>
+        <tr><td>FR-3.7</td><td>Partial exit (25/50/75% at Target 1)</td><td>P1</td><td>✅ Frontend</td></tr>
+        <tr><td>FR-3.8</td><td>Time-based auto exit (HH:MM)</td><td>P1</td><td>✅ Frontend</td></tr>
+        <tr><td>FR-3.9</td><td>Re-entry after SL hit</td><td>P2</td><td>✅ Frontend</td></tr>
+        <tr><td>FR-3.10</td><td>12-layer order validation (price, qty, freeze, margin, ban check)</td><td>P0</td><td>✅ Frontend</td></tr>
+      </table>
+
+      <h4>FR-4: Quick Fire Macros (15 Pre-built)</h4>
+      <table>
+        <tr><th>Req ID</th><th>Description</th><th>Priority</th><th>Status</th></tr>
+        <tr><td>FR-4.1</td><td>ATM Straddle Short/Long (Ctrl+1/2)</td><td>P0</td><td>✅</td></tr>
+        <tr><td>FR-4.2</td><td>0.2Δ / 0.3Δ Strangle Short (Ctrl+3)</td><td>P0</td><td>✅</td></tr>
+        <tr><td>FR-4.3</td><td>Group execution across 3 indices (Ctrl+4)</td><td>P0</td><td>✅</td></tr>
+        <tr><td>FR-4.4</td><td>Iron Condor / Iron Butterfly (Ctrl+5/6)</td><td>P0</td><td>✅</td></tr>
+        <tr><td>FR-4.5</td><td>Bull Call / Bear Put Spread (Ctrl+7/8)</td><td>P1</td><td>✅</td></tr>
+        <tr><td>FR-4.6</td><td>Jade Lizard, Ratio Spread, Calendar Spread</td><td>P2</td><td>✅</td></tr>
+        <tr><td>FR-4.7</td><td>0-DTE Scalp with bracket (Ctrl+9)</td><td>P0</td><td>✅</td></tr>
+        <tr><td>FR-4.8</td><td>Hedge All Positions (Ctrl+Shift+H)</td><td>P0</td><td>✅</td></tr>
+        <tr><td>FR-4.9</td><td>EXIT ALL PANIC (Ctrl+Shift+X)</td><td>P0</td><td>✅</td></tr>
+        <tr><td>FR-4.10</td><td>Custom macro builder with leg editor</td><td>P0</td><td>✅</td></tr>
+      </table>
+
+      <h4>FR-5: Risk Management (RMS)</h4>
+      <table>
+        <tr><th>Req ID</th><th>Description</th><th>Priority</th><th>Status</th></tr>
+        <tr><td>FR-5.1</td><td>Max single order value limit</td><td>P0</td><td>✅ Settings</td></tr>
+        <tr><td>FR-5.2</td><td>Max position value limit</td><td>P0</td><td>✅ Settings</td></tr>
+        <tr><td>FR-5.3</td><td>Max day loss (M2M) auto-disable</td><td>P0</td><td>✅ Settings</td></tr>
+        <tr><td>FR-5.4</td><td>Kill switch threshold (₹)</td><td>P0</td><td>✅ Settings</td></tr>
+        <tr><td>FR-5.5</td><td>Auto square-off at time (HH:MM)</td><td>P0</td><td>✅ Settings</td></tr>
+        <tr><td>FR-5.6</td><td>Max lots per order + rate limit (orders/min)</td><td>P0</td><td>✅ Settings</td></tr>
+        <tr><td>FR-5.7</td><td>Lock trading after limits hit (PIN unlock)</td><td>P1</td><td>✅ Settings</td></tr>
+        <tr><td>FR-5.8</td><td>Emergency kill switch button</td><td>P0</td><td>✅ RMS tab</td></tr>
+      </table>
+
+      <h4>FR-6: Charts & Analytics</h4>
+      <table>
+        <tr><th>Req ID</th><th>Description</th><th>Priority</th><th>Status</th></tr>
+        <tr><td>FR-6.1</td><td>OHLC Candlestick chart (TradingView)</td><td>P0</td><td>✅</td></tr>
+        <tr><td>FR-6.2</td><td>Heikin Ashi chart with toggle</td><td>P0</td><td>✅</td></tr>
+        <tr><td>FR-6.3</td><td>SMA 30/100/200 + EMA 9/21 overlays</td><td>P0</td><td>✅</td></tr>
+        <tr><td>FR-6.4</td><td>Bollinger Bands + Volume</td><td>P1</td><td>✅</td></tr>
+        <tr><td>FR-6.5</td><td>HA AI color-change alerts with SL study</td><td>P1</td><td>✅</td></tr>
+        <tr><td>FR-6.6</td><td>6 timeframes: 1m, 3m, 5m, 15m, 1h, 1d</td><td>P0</td><td>✅</td></tr>
+      </table>
+
+      <h3>3. Non-Functional Requirements</h3>
+      <table>
+        <tr><th>NFR</th><th>Target</th><th>Measurement</th></tr>
+        <tr><td>Latency</td><td>&lt;200ms tick-to-screen</td><td>WebSocket → React state → DOM paint</td></tr>
+        <tr><td>Throughput</td><td>200+ symbols at 1s refresh</td><td>Stress test with full universe</td></tr>
+        <tr><td>Availability</td><td>99.9% during market hours</td><td>9:00-15:30 IST Mon-Fri</td></tr>
+        <tr><td>Bundle Size</td><td>&lt;700KB gzipped</td><td>Vite production build</td></tr>
+        <tr><td>TTFB</td><td>&lt;100ms</td><td>Cloudflare edge delivery</td></tr>
+        <tr><td>FCP</td><td>&lt;1.5s</td><td>Lighthouse measurement</td></tr>
+        <tr><td>Memory</td><td>&lt;200MB</td><td>Chrome DevTools heap snapshot</td></tr>
+        <tr><td>Security</td><td>3FA + JWT + encrypted creds</td><td>Auth flow testing</td></tr>
+      </table>
+    </section>
+
+    <!-- ==================== BACKEND ARCHITECTURE ==================== -->
+    <section id="backend">
+      <h2>🏗️ Backend Architecture — Node.js + Fastify + Socket.io</h2>
+      <p>Server-side bridge between the React frontend and the 21 AlgoEngines. Handles authentication, real-time data streaming, order routing, and state management.</p>
+
+      <h3>Stack</h3>
+      <table>
+        <tr><th>Component</th><th>Technology</th><th>Purpose</th></tr>
+        <tr><td>Runtime</td><td>Node.js 20 LTS</td><td>Event-driven, non-blocking I/O</td></tr>
+        <tr><td>Framework</td><td>Fastify 4.x</td><td>High-performance HTTP (~30K req/s)</td></tr>
+        <tr><td>Real-time</td><td>Socket.io 4.x</td><td>WebSocket with fallback, rooms, ack</td></tr>
+        <tr><td>Database</td><td>PostgreSQL (Ker DB)</td><td>Persistent state, settings, audit</td></tr>
+        <tr><td>Cache</td><td>Redis 7</td><td>Live ticks, session, pub/sub</td></tr>
+        <tr><td>Auth</td><td>Shield JWT + local</td><td>Token validation, session mgmt</td></tr>
+      </table>
+
+      <h3>Module Architecture</h3>
+      <div class="arch-box">backend/
+├── src/
+│   ├── server.js              # Fastify bootstrap + Socket.io setup
+│   ├── config/
+│   │   ├── index.js           # Env config (engines, ports, DB)
+│   │   └── engines.js         # 21 engine port registry
+│   ├── routes/
+│   │   ├── auth.js            # POST /auth/login, /auth/verify
+│   │   ├── market.js          # GET /market/universe, /market/ltp
+│   │   ├── options.js         # GET /options/chain/:symbol
+│   │   ├── orders.js          # POST /orders/place, DELETE /orders/:id
+│   │   ├── positions.js       # GET /positions, POST /positions/exit-all
+│   │   ├── settings.js        # GET/PUT /settings/:userId
+│   │   ├── macros.js          # CRUD /macros
+│   │   └── health.js          # GET /health, /health/engines
+│   ├── services/
+│   │   ├── LakshmiService.js  # Live LTP stream (port 3003)
+│   │   ├── GaneshService.js   # OHLC data (port 3002)
+│   │   ├── GarudaService.js   # Option chain/IV (port 3011)
+│   │   ├── VegaService.js     # Order execution (port 3007)
+│   │   ├── KavachService.js   # Risk/Kill switch (port 3010)
+│   │   ├── ShieldService.js   # Auth/JWT (port 3000)
+│   │   └── SuryaService.js    # Universe/BOD (port 3001)
+│   ├── ws/
+│   │   ├── tickBroadcaster.js # Socket.io → broadcast ticks to clients
+│   │   ├── orderUpdater.js    # Socket.io → push order status updates
+│   │   └── alertEmitter.js    # Socket.io → push RMS/AI alerts
+│   ├── middleware/
+│   │   ├── authGuard.js       # JWT verification
+│   │   ├── rmsValidator.js    # Pre-trade risk checks
+│   │   └── rateLimiter.js     # Orders/min throttle
+│   ├── db/
+│   │   ├── pool.js            # PostgreSQL connection pool
+│   │   ├── migrations/        # Schema versions
+│   │   └── queries/           # Parameterized SQL
+│   └── utils/
+│       ├── logger.js          # Structured JSON logging
+│       └── circuitBreaker.js  # Engine connection health
+├── package.json
+├── .env.example
+└── Dockerfile</div>
+
+      <h3>Engine Integration Map</h3>
+      <table>
+        <tr><th>Engine</th><th>Port</th><th>Backend Service</th><th>Data Flow</th></tr>
+        <tr><td>Shield</td><td>3000</td><td>ShieldService</td><td>POST /api/Auth/Login → JWT token</td></tr>
+        <tr><td>Surya</td><td>3001</td><td>SuryaService</td><td>GET /api/universe → 220 symbols + lot sizes</td></tr>
+        <tr><td>Ganesh</td><td>3002</td><td>GaneshService</td><td>GET /api/Broadcast/GetOHLC → OHLC bars</td></tr>
+        <tr><td>Lakshmi</td><td>3003</td><td>LakshmiService</td><td>WS /ws/ticks → real-time LTP stream</td></tr>
+        <tr><td>Vega</td><td>3007</td><td>VegaService</td><td>POST /api/orders → place/modify/cancel</td></tr>
+        <tr><td>Kavach</td><td>3010</td><td>KavachService</td><td>POST /api/risk/kill → emergency kill switch</td></tr>
+        <tr><td>Garuda</td><td>3011</td><td>GarudaService</td><td>GET /api/garuda/v1/chain → option chain + IV</td></tr>
+      </table>
+    </section>
+
+    <!-- ==================== DATA CONTRACTS ==================== -->
+    <section id="datacontracts">
+      <h2>📄 Data Contracts — API Specifications</h2>
+      <p>Complete request/response contracts for every API endpoint between frontend → backend → engines.</p>
+
+      <h3>Frontend → Backend API</h3>
+      <h4>POST /api/auth/login</h4>
+      <div class="arch-box">Request:
+  { userId: "string", password: "string", pin: "string" }
+
+Response:
+  { token: "jwt", user: { id, name, role }, engines: { shield: "ok", lakshmi: "ok" ... } }
+
+Headers: Content-Type: application/json</div>
+
+      <h4>GET /api/market/universe</h4>
+      <div class="arch-box">Response:
+  { symbols: [
+    { symbol: "NIFTY", token: 4, ltp: 24500.50, prevClose: 24350.00,
+      change: 150.50, changePct: 0.62, high: 24600, low: 24400,
+      volume: 4500000, oi: 1200000, lotSize: 75,
+      sma30: 24200, sma100: 23900, sma200: 23500,
+      iv: 15.3, iv5dHigh: 18.2, iv5dLow: 12.1,
+      ceDelta01Strike: 25500, peDelta01Strike: 23500,
+      sector: "INDICES", synFutures: 24510.20 }
+    ...
+  ], count: 220, timestamp: "2026-04-19T09:15:00Z" }</div>
+
+      <h4>Socket.io Events</h4>
+      <table>
+        <tr><th>Event</th><th>Direction</th><th>Payload</th></tr>
+        <tr><td>tick</td><td>Server → Client</td><td><code>{ symbol, ltp, change, changePct, volume, oi, timestamp }</code></td></tr>
+        <tr><td>orderUpdate</td><td>Server → Client</td><td><code>{ orderId, status, filledQty, avgPrice, timestamp }</code></td></tr>
+        <tr><td>alert</td><td>Server → Client</td><td><code>{ type, severity, message, symbol, data }</code></td></tr>
+        <tr><td>position</td><td>Server → Client</td><td><code>{ symbol, qty, avgPrice, ltp, pnl, pnlPct }</code></td></tr>
+        <tr><td>subscribe</td><td>Client → Server</td><td><code>{ symbols: ["NIFTY", "BANKNIFTY", ...] }</code></td></tr>
+        <tr><td>placeOrder</td><td>Client → Server</td><td><code>{ symbol, side, type, qty, price, product, bracket }</code></td></tr>
+      </table>
+
+      <h4>GET /api/options/chain/:symbol</h4>
+      <div class="arch-box">Response:
+  { symbol: "NIFTY", expiry: "2026-04-24", spotLTP: 24500,
+    chain: [
+      { strike: 24000,
+        call: { token: 12345, ltp: 520, iv: 16.2, delta: 0.72, oi: 45000, buildup: "Long Build" },
+        put:  { token: 12346, ltp: 15,  iv: 14.8, delta: -0.08, oi: 78000, buildup: "Short Build" }
+      }, ...
+    ],
+    atmStrike: 24500, maxPainStrike: 24400,
+    pcr: 1.23, totalCallOI: 850000, totalPutOI: 1045000 }</div>
+
+      <h4>POST /api/orders/place</h4>
+      <div class="arch-box">Request:
+  { symbol: "NIFTY260424C25000", side: "BUY", orderType: "LIMIT",
+    qty: 75, price: 120.50, product: "MIS", validity: "DAY",
+    bracket: { enabled: true, sl: 30, target: 50, trailing: true, trailPts: 10 } }
+
+Response:
+  { orderId: "TY-20260419-001", status: "PENDING", message: "Order placed successfully",
+    validations: { margin: "OK", freeze: "OK", ban: "OK", risk: "OK" } }</div>
+    </section>
+
+    <!-- ==================== DEV GUIDE ==================== -->
+    <section id="devguide">
+      <h2>🛠️ Developer Guide</h2>
+      <p>Development setup, conventions, and contribution guidelines for the Theta Yantra codebase.</p>
+
+      <h3>Project Structure</h3>
+      <div class="arch-box">SRE THETA YANTRA/
+├── frontend/                    # React + Vite frontend
+│   ├── public/
+│   │   ├── kb.html             # This knowledge base
+│   │   └── manifest.json       # PWA manifest
+│   ├── src/
+│   │   ├── App.jsx             # Root component — view routing + modals
+│   │   ├── components/         # Shared components
+│   │   │   ├── CandlestickChart.jsx  # TradingView chart wrapper
+│   │   │   ├── ChartPopup.jsx        # Chart modal (uses CandlestickChart)
+│   │   │   ├── Header.jsx            # Top bar: status, clock, help
+│   │   │   ├── HelpOverlay.jsx       # 5-tab help system
+│   │   │   ├── OptionChainPopup.jsx   # Full option chain modal
+│   │   │   ├── OrderEntryWindow.jsx   # Buy/Sell order form
+│   │   │   ├── QuickSearch.jsx        # Ctrl+Space search
+│   │   │   ├── SettingsPanel.jsx      # 10-tab ODIN+ settings
+│   │   │   └── TechnicalPopup.jsx     # Technical indicators modal
+│   │   ├── views/              # Main view components (8 views)
+│   │   │   ├── MarketWatchView.jsx    # Default: full market grid
+│   │   │   ├── OptionsTraderView.jsx  # Options-first with chain
+│   │   │   ├── ScalperView.jsx        # Dual chart + depth
+│   │   │   ├── IVAnalysisView.jsx     # IV intelligence
+│   │   │   └── ... (8 total)
+│   │   ├── panels/             # Right sidebar panels (22 panels)
+│   │   │   ├── QuickFireMacroPanel.jsx  # 15 pre-built QFMs
+│   │   │   ├── HeikinAshiPanel.jsx      # HA AI alerts
+│   │   │   └── ... (22 total)
+│   │   ├── layouts/            # Layout components
+│   │   │   ├── LeftNavBar.jsx         # View navigation
+│   │   │   └── RightSidebar.jsx       # Panel container
+│   │   ├── store/              # Zustand state management
+│   │   │   └── useMarketStore.js      # Global market state
+│   │   └── index.css           # Design system (CSS variables)
+│   └── package.json
+├── backend/                     # Node.js + Fastify backend (Sprint 14+)
+└── README.md</div>
+
+      <h3>Key Dependencies</h3>
+      <table>
+        <tr><th>Package</th><th>Version</th><th>Purpose</th></tr>
+        <tr><td>react</td><td>19.x</td><td>UI framework</td></tr>
+        <tr><td>vite</td><td>5.x</td><td>Build tool + dev server</td></tr>
+        <tr><td>zustand</td><td>5.x</td><td>Global state management</td></tr>
+        <tr><td>lightweight-charts</td><td>5.1.0</td><td>TradingView candlestick charts</td></tr>
+      </table>
+
+      <h3>Development Commands</h3>
+      <div class="arch-box">Frontend:
+  cd frontend
+  npm install             # Install dependencies
+  npm run dev             # Start dev server (http://localhost:5173)
+  npm run build           # Production build → dist/
+  npm run preview         # Preview production build
+
+Backend (Sprint 14+):
+  cd backend
+  npm install
+  npm run dev             # Start with nodemon
+  npm run start           # Production start
+  npm run migrate         # Run DB migrations
+  npm run test            # Run test suite</div>
+
+      <h3>Coding Conventions</h3>
+      <table>
+        <tr><th>Convention</th><th>Rule</th></tr>
+        <tr><td>Components</td><td>PascalCase: <code>MyComponent.jsx</code></td></tr>
+        <tr><td>Views</td><td>Suffix <code>View</code>: <code>ScalperView.jsx</code></td></tr>
+        <tr><td>Panels</td><td>Suffix <code>Panel</code>: <code>HeikinAshiPanel.jsx</code></td></tr>
+        <tr><td>Services</td><td>Suffix <code>Service</code>: <code>LakshmiService.js</code></td></tr>
+        <tr><td>State</td><td>Zustand stores: <code>useMarketStore.js</code></td></tr>
+        <tr><td>CSS</td><td>All in <code>index.css</code> using CSS variables</td></tr>
+        <tr><td>Inline styles</td><td>Used for component-specific styling, panels</td></tr>
+        <tr><td>Exchange data</td><td>LTP stored as int×100, divide by 100 for display</td></tr>
+      </table>
+    </section>
+
+  </main>
+</div>
+
+<script>
+  // Smooth scroll for nav links
+  document.querySelectorAll('.nav-item').forEach(link => {
+    link.addEventListener('click', function(e) {
+      document.querySelectorAll('.nav-item').forEach(l => l.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+  
+  // Highlight active section on scroll
+  const sections = document.querySelectorAll('section');
+  const navItems = document.querySelectorAll('.nav-item');
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(s => { if (window.scrollY >= s.offsetTop - 100) current = s.id; });
+    navItems.forEach(n => {
+      n.classList.remove('active');
+      if (n.getAttribute('href') === '#' + current) n.classList.add('active');
+    });
+  });
+
+  // Search
+  function filterSections(query) {
+    const q = query.toLowerCase();
+    document.querySelectorAll('section').forEach(s => {
+      s.style.display = !q || s.textContent.toLowerCase().includes(q) ? 'block' : 'none';
+    });
+  }
+  
+  // Ctrl+K for search
+  document.addEventListener('keydown', e => {
+    if (e.ctrlKey && e.key === 'k') { e.preventDefault(); document.getElementById('kbSearch').focus(); }
+  });
+</script>
+</body>
+</html>

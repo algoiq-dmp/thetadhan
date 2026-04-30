@@ -18,6 +18,8 @@ import EngineSettingsPanel from './components/EngineSettingsPanel';
 import HelpOverlay from './components/HelpOverlay';
 import { ToastContainer } from './utils/toastSystem';
 import MessageBar from './components/MessageBar';
+import PositionsPanel from './panels/PositionsPanel';
+import OrdersPanel from './panels/OrdersPanel';
 
 // V4: Layout components
 import LeftNavBar from './layouts/LeftNavBar';
@@ -61,6 +63,9 @@ export default function App() {
   const [showQuickSearch, setShowQuickSearch] = useState(false);
   const [showEngineSettings, setShowEngineSettings] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  const [showPositionPopup, setShowPositionPopup] = useState(false);
+  const [showTradeBookPopup, setShowTradeBookPopup] = useState(false);
+  const [showOrderBookPopup, setShowOrderBookPopup] = useState(false);
 
   // Restore Dhan session on page load (Bug #7 fix)
   useEffect(() => {
@@ -164,7 +169,7 @@ export default function App() {
           break;
         case 'F3':
           e.preventDefault();
-          setActivePanel('orders');
+          setShowOrderBookPopup(true);
           break;
         case 'F5':
           e.preventDefault();
@@ -173,11 +178,12 @@ export default function App() {
           break;
         case 'F7':
           e.preventDefault();
-          setActivePanel('positions');
+          if (e.altKey) setShowPositionPopup(true);
+          else setActivePanel('positions');
           break;
         case 'F8':
           e.preventDefault();
-          setActivePanel('orders');
+          setShowTradeBookPopup(true);
           break;
         case 'F9':
           e.preventDefault();
@@ -197,6 +203,9 @@ export default function App() {
           setShowTechnical(null);
           closeOrderEntry();
           setShowAddScrip(false);
+          setShowPositionPopup(false);
+          setShowTradeBookPopup(false);
+          setShowOrderBookPopup(false);
           break;
         case '+':
         case '=':
@@ -443,6 +452,59 @@ export default function App() {
       {renderOrderWindow()}
       {showEngineSettings && <EngineSettingsPanel onClose={() => setShowEngineSettings(false)} />}
       {showHelp && <HelpOverlay onClose={() => setShowHelp(false)} />}
+
+      {/* Net Position Popup (Alt+F7) */}
+      {showPositionPopup && (
+        <div className="modal-overlay" onClick={() => setShowPositionPopup(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: 900 }}>
+            <div className="modal-header">
+              <div className="modal-title">💰 Net Position</div>
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                <span className="kbd" style={{ fontSize: 10 }}>Alt+F7</span>
+                <button className="modal-close" onClick={() => setShowPositionPopup(false)}>✕</button>
+              </div>
+            </div>
+            <div className="modal-body" style={{ padding: 0, maxHeight: '70vh', overflow: 'auto' }}>
+              <PositionsPanel />
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Trade Book Popup (F8) */}
+      {showTradeBookPopup && (
+        <div className="modal-overlay" onClick={() => setShowTradeBookPopup(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: 900 }}>
+            <div className="modal-header">
+              <div className="modal-title">📒 Trade Book</div>
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                <span className="kbd" style={{ fontSize: 10 }}>F8</span>
+                <button className="modal-close" onClick={() => setShowTradeBookPopup(false)}>✕</button>
+              </div>
+            </div>
+            <div className="modal-body" style={{ padding: 0, maxHeight: '70vh', overflow: 'auto' }}>
+              <OrdersPanel />
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Order Book Popup (F3) */}
+      {showOrderBookPopup && (
+        <div className="modal-overlay" onClick={() => setShowOrderBookPopup(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: 900 }}>
+            <div className="modal-header">
+              <div className="modal-title">📝 Pending Order Book</div>
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                <span className="kbd" style={{ fontSize: 10 }}>F3</span>
+                <button className="modal-close" onClick={() => setShowOrderBookPopup(false)}>✕</button>
+              </div>
+            </div>
+            <div className="modal-body" style={{ padding: 0, maxHeight: '70vh', overflow: 'auto' }}>
+              <OrdersPanel />
+            </div>
+          </div>
+        </div>
+      )}
+
       <ToastContainer />
     </div>
   );

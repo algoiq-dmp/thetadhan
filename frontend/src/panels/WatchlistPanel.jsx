@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import useMarketStore from '../store/useMarketStore';
+import AddScripDialog from '../components/AddScripDialog';
 
 export default function WatchlistPanel() {
   const universe = useMarketStore(s => s.universe);
@@ -8,6 +9,7 @@ export default function WatchlistPanel() {
   const watchlists = useMarketStore(s => s.watchlists);
   const activeWatchlist = useMarketStore(s => s.activeWatchlist);
   const setActiveWatchlist = useMarketStore(s => s.setActiveWatchlist);
+  const [showAdd, setShowAdd] = useState(false);
 
   const wlKeys = Object.keys(watchlists);
   const activeListSymbols = watchlists[activeWatchlist] || [];
@@ -31,13 +33,13 @@ export default function WatchlistPanel() {
             style={{ flex: 1, fontSize: 10, whiteSpace: 'nowrap', padding: '4px 8px' }}
           >{i + 1}</button>
         ))}
-        <button className="panel-tab" style={{ flex: 'none', padding: '4px 10px', fontSize: 12 }}>+</button>
+        <button className="panel-tab" onClick={() => setShowAdd(true)} style={{ flex: 'none', padding: '4px 10px', fontSize: 12, cursor: 'pointer' }}>+</button>
       </div>
 
       {/* Header */}
       <div style={{ padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border)' }}>
         <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-heading)' }}>{activeWatchlist}</span>
-        <button style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 4, padding: '2px 8px', fontSize: 10, color: 'var(--text-muted)', cursor: 'pointer' }}>+ Add</button>
+        <button onClick={() => setShowAdd(true)} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 4, padding: '2px 8px', fontSize: 10, color: 'var(--cyan)', cursor: 'pointer', fontWeight: 600 }}>+ Add</button>
       </div>
 
       {/* Table */}
@@ -100,6 +102,7 @@ export default function WatchlistPanel() {
           </div>
         </div>
       )}
+      {showAdd && <AddScripDialog position={0} onAdd={() => {}} onClose={() => setShowAdd(false)} />}
     </div>
   );
 }

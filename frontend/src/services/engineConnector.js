@@ -248,6 +248,30 @@ class EngineConnector {
     } catch { return null; }
   }
 
+  /** Fetch Daily OHLC for technical analysis (last 250 trading days ~1 year) */
+  async getDailyOHLC({ securityId, exchangeSegment, instrument }) {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const fromD = new Date(); fromD.setFullYear(fromD.getFullYear() - 1);
+      const fromDate = fromD.toISOString().split('T')[0];
+      const res = await fetch(`${this.apiUrl}/api/market/historical`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('dhan_token')}`,
+          'X-Client-Id': localStorage.getItem('dhan_client_id')
+        },
+        body: JSON.stringify({
+          securityId: String(securityId), exchangeSegment, instrument,
+          interval: '1', oi: false, isIntraday: false,
+          fromDate, toDate: today
+        })
+      });
+      const data = await res.json();
+      return data.success ? data.data : null;
+    } catch { return null; }
+  }
+
   /** Fetch LTP + OHLC for multiple instruments (for polling) */
   async getLTP(instrumentMap) {
     try {

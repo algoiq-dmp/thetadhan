@@ -496,7 +496,7 @@ body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
   border-bottom: 1px solid var(--border);
 }
 .modal-title {
-  font-size: 14px; font-weight: 700;
+  font-size: 15px; font-weight: 700;
   color: var(--text-heading);
   display: flex; align-items: center; gap: 8px;
 }
@@ -521,13 +521,13 @@ body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
 .chain-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 11.5px;
+  font-size: 12px;
 }
 .chain-table th {
-  padding: 6px 8px;
+  padding: 7px 10px;
   background: var(--bg-card);
   color: var(--text-muted);
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -535,10 +535,10 @@ body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
   position: sticky; top: 0; z-index: 2;
 }
 .chain-table td {
-  padding: 5px 8px;
+  padding: 6px 10px;
   border-bottom: 1px solid var(--border);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
   text-align: right;
   cursor: pointer;
   transition: background var(--transition);
@@ -779,7 +779,7 @@ body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
 .orders-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 11px;
+  font-size: 12px;
 }
 .positions-table th,
 .orders-table th {
@@ -794,9 +794,9 @@ body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
 }
 .positions-table td,
 .orders-table td {
-  padding: 4px 8px;
+  padding: 6px 10px;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
   text-align: right;
   border-bottom: 1px solid var(--border);
 }

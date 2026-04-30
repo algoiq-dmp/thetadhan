@@ -1,0 +1,31 @@
+name = "thetadhan-api"
+main = "src/index.js"
+compatibility_date = "2026-04-30"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+DHAN_API_BASE = "https://api.dhan.co/v2"
+DHAN_AUTH_URL = "https://auth.dhan.co"
+DHAN_FEED_URL = "wss://api-feed.dhan.co"
+
+# Secrets (set via: npx wrangler secret put DHAN_CLIENT_ID, etc.)
+# DHAN_CLIENT_ID
+# DHAN_PIN
+# DHAN_TOTP_SECRET
+
+[[d1_databases]]
+binding = "DB"
+database_name = "thetadhan-db"
+database_id = "96616fff-1bd5-4586-b20b-e3d0793b76fc"
+
+[[durable_objects.bindings]]
+name = "FEED_RELAY"
+class_name = "FeedRelay"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["FeedRelay"]
+
+# Cron: daily instrument sync at 6:00 AM IST (00:30 UTC)
+[triggers]
+crons = ["30 0 * * *"]

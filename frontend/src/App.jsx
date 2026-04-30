@@ -126,12 +126,12 @@ export default function App() {
       // Shift combos
       if (e.shiftKey) {
         switch (e.key) {
-          case 'F1': e.preventDefault(); alert('Cancel selected order (Shift+F1)'); return;
-          case 'F2': e.preventDefault(); alert('Modify selected order (Shift+F2)'); return;
-          case 'F3': e.preventDefault(); alert('Cancel ALL pending orders (Shift+F3)'); return;
+          case 'F1': e.preventDefault(); { const toast = document.createElement('div'); toast.textContent = '⏳ Cancel selected order (Shift+F1)'; toast.style.cssText = 'position:fixed;top:60px;right:20px;z-index:99999;padding:10px 18px;background:#f59e0b;color:#000;border-radius:6px;font-size:12px;font-weight:600;'; document.body.appendChild(toast); setTimeout(() => toast.remove(), 2000); } return;
+          case 'F2': e.preventDefault(); { const toast = document.createElement('div'); toast.textContent = '✏️ Modify selected order (Shift+F2)'; toast.style.cssText = 'position:fixed;top:60px;right:20px;z-index:99999;padding:10px 18px;background:#3b82f6;color:#fff;border-radius:6px;font-size:12px;font-weight:600;'; document.body.appendChild(toast); setTimeout(() => toast.remove(), 2000); } return;
+          case 'F3': e.preventDefault(); { const toast = document.createElement('div'); toast.textContent = '🚨 Cancel ALL pending orders (Shift+F3)'; toast.style.cssText = 'position:fixed;top:60px;right:20px;z-index:99999;padding:10px 18px;background:#ef4444;color:#fff;border-radius:6px;font-size:12px;font-weight:600;'; document.body.appendChild(toast); setTimeout(() => toast.remove(), 2000); } return;
           case 'F6': e.preventDefault(); useMarketStore.getState().setPositionTab('positions'); return;
-          case 'F7': e.preventDefault(); alert('Security info (Shift+F7)'); return;
-          case 'F8': e.preventDefault(); alert('Contract info (Shift+F8)'); return;
+          case 'F7': e.preventDefault(); { const toast = document.createElement('div'); toast.textContent = 'ℹ️ Security info (Shift+F7)'; toast.style.cssText = 'position:fixed;top:60px;right:20px;z-index:99999;padding:10px 18px;background:#06b6d4;color:#fff;border-radius:6px;font-size:12px;font-weight:600;'; document.body.appendChild(toast); setTimeout(() => toast.remove(), 2000); } return;
+          case 'F8': e.preventDefault(); { const toast = document.createElement('div'); toast.textContent = '📋 Contract details (Shift+F8)'; toast.style.cssText = 'position:fixed;top:60px;right:20px;z-index:99999;padding:10px 18px;background:#06b6d4;color:#fff;border-radius:6px;font-size:12px;font-weight:600;'; document.body.appendChild(toast); setTimeout(() => toast.remove(), 2000); } return;
           case 'Enter': e.preventDefault(); return;
         }
       }
@@ -168,6 +168,8 @@ export default function App() {
           break;
         case 'F5':
           e.preventDefault();
+          useMarketStore.getState().connectEngines().then(() => useMarketStore.getState().startLTPPolling());
+          { const toast = document.createElement('div'); toast.textContent = '🔄 Refreshing all data...'; toast.style.cssText = 'position:fixed;top:60px;right:20px;z-index:99999;padding:10px 18px;background:#10b981;color:#fff;border-radius:6px;font-size:12px;font-weight:600;'; document.body.appendChild(toast); setTimeout(() => toast.remove(), 2000); }
           break;
         case 'F7':
           e.preventDefault();
@@ -193,15 +195,15 @@ export default function App() {
           closeOptionChain();
           closeChart();
           setShowTechnical(null);
-          setOrderWindow(null);
+          closeOrderEntry();
           setShowAddScrip(false);
           break;
         case '+':
         case '=':
-          if (!e.ctrlKey && selected) setOrderWindow({ side: 'BUY', symbol: selected.symbol, ltp: selected.ltp });
+          if (!e.ctrlKey && selected) openOrderEntry({ side: 'BUY', symbol: selected.symbol, price: selected.ltp });
           break;
         case '-':
-          if (!e.ctrlKey && selected) setOrderWindow({ side: 'SELL', symbol: selected.symbol, ltp: selected.ltp });
+          if (!e.ctrlKey && selected) openOrderEntry({ side: 'SELL', symbol: selected.symbol, price: selected.ltp });
           break;
         case 'Insert':
           e.preventDefault();

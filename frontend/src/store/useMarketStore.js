@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import engineConnector from '../services/engineConnector';
 import wsManager from '../services/wsManager';
+import { getSector } from '../data/sectors';
 
 // ── Watchlist version — bump this to reset user's cached watchlists ──
 const WATCHLIST_VERSION = 'v2-index-2026';
@@ -343,7 +344,7 @@ const useMarketStore = create((set, get) => ({
         iv: 0, ivHigh5d: 0, ivLow5d: 0,
         ceStrike: 0, peStrike: 0, cePremium: 0, pePremium: 0,
         // Metadata
-        sector: inst.exchange_segment === 'NSE_EQ' ? 'EQ' : 'F&O',
+        sector: getSector(inst.symbol),
         lotSize: inst.lot_size || 0,
         strike: inst.strike_price || 0,
         callPut: inst.option_type || '',
@@ -382,7 +383,7 @@ const useMarketStore = create((set, get) => ({
           sma30: 0, sma100: 0, sma200: 0,
           iv: 0, ivHigh5d: 0, ivLow5d: 0,
           ceStrike: 0, peStrike: 0, cePremium: 0, pePremium: 0,
-          sector: 'F&O',
+          sector: getSector(inst.symbol),
           lotSize: inst.lot_size || 0,
           strike: 0, callPut: '', expiry: inst.nearest_expiry || '',
           type: 'FUTIDX', flashClass: '',
@@ -428,7 +429,7 @@ const useMarketStore = create((set, get) => ({
       sma30: 0, sma100: 0, sma200: 0,
       iv: 0, ivHigh5d: 0, ivLow5d: 0,
       ceStrike: 0, peStrike: 0, cePremium: 0, pePremium: 0,
-      sector: s.exchange_segment === 'NSE_EQ' ? 'EQ' : 'F&O',
+      sector: getSector(s.symbol),
       strike: 0, callPut: '', expiry: '', type: '', flashClass: '',
     }));
     get().setUniverse(seeds);

@@ -414,7 +414,7 @@ export default function App() {
   return !isAuthenticated ? <LoginPage /> : (
     <div className={`app-layout${isFullscreen ? ' fullscreen' : ''}`}>
       <Header searchRef={searchRef} onOpenEngineSettings={() => setShowEngineSettings(true)} onOpenHelp={() => setShowHelp(true)} />
-      <Toolbar searchRef={searchRef} />
+      <Toolbar searchRef={searchRef} onAddScrip={() => setShowAddScrip(true)} />
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         {/* V4: Left Navigation Bar */}
         <LeftNavBar />

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import useMarketStore from '../store/useMarketStore';
+import { getSector } from '../data/sectors';
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://thetadhan-api.parlight2.workers.dev';
 
@@ -49,7 +50,7 @@ export default function AddScripDialog({ onAdd, onClose, position }) {
       ltp: 0, prevClose: 0, change: 0, changePct: 0,
       todayHigh: 0, todayLow: 0, volume: 0, oi: 0,
       sma30: 0, sma100: 0, sma200: 0, iv: 0,
-      sector: instrument.exchange_segment === 'NSE_EQ' ? 'EQ' : 'F&O',
+      sector: getSector(instrument.symbol || instrument.trading_symbol),
       lotSize: instrument.lot_size || 0,
       strike: instrument.strike_price || 0,
       callPut: instrument.option_type || '',

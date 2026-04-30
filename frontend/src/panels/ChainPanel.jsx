@@ -14,6 +14,7 @@ export default function ChainPanel() {
   const [chain, setChain] = useState({ symbol: sel?.symbol, ltp: sel?.ltp || 0, lotSize: sel?.lotSize || 65, atm: sel?.ltp || 0, expiry: '', strikes: [], pcr: 0, maxPain: 0 });
   const [expiries, setExpiries] = useState([]);
   const [selectedExpiry, setSelectedExpiry] = useState('');
+  const [strikeRange, setStrikeRange] = useState(20);
 
   // Fetch expiry list
   useEffect(() => {
@@ -118,13 +119,31 @@ export default function ChainPanel() {
             {chain.strikes.length === 0 && (
               <tr><td colSpan="3" style={{ padding: 16, textAlign: 'center', color: 'var(--text-muted)', fontSize: 10 }}>Loading chain...</td></tr>
             )}
-            {chain.strikes.map(s => (
-              <tr key={s.strike} style={{ borderBottom: '1px solid var(--border)', background: s.isATM ? 'var(--cyan-soft)' : 'transparent', cursor: 'pointer' }}>
-                <td style={{ padding: '4px 6px', textAlign: 'right', fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 600, color: 'var(--green)' }}>{s.callLTP.toFixed(2)}</td>
-                <td style={{ padding: '4px 6px', textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 600, color: s.isATM ? 'var(--cyan)' : 'var(--text-heading)' }}>{s.strike}</td>
-                <td style={{ padding: '4px 6px', textAlign: 'right', fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 600, color: 'var(--red)' }}>{s.putLTP.toFixed(2)}</td>
-              </tr>
-            ))}
+            {(() => {
+              const allStrikes = chain.strikes;
+              const atmIdx = allStrikes.findIndex(s => s.isATM);
+              const display = (atmIdx < 0 || strikeRange >= allStrikes.length)
+                ? allStrikes
+                : allStrikes.slice(Math.max(0, atmIdx - strikeRange), Math.min(allStrikes.length, atmIdx + strikeRange + 1));
+              return (
+                <>
+                  {display.map(s => (
+                    <tr key={s.strike} style={{ borderBottom: '1px solid var(--border)', background: s.isATM ? 'var(--cyan-soft)' : 'transparent', cursor: 'pointer' }}>
+                      <td style={{ padding: '4px 6px', textAlign: 'right', fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 600, color: 'var(--green)' }}>{s.callLTP.toFixed(2)}</td>
+                      <td style={{ padding: '4px 6px', textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 600, color: s.isATM ? 'var(--cyan)' : 'var(--text-heading)' }}>{s.strike}</td>
+                      <td style={{ padding: '4px 6px', textAlign: 'right', fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 600, color: 'var(--red)' }}>{s.putLTP.toFixed(2)}</td>
+                    </tr>
+                  ))}
+                  {allStrikes.length > display.length && (
+                    <tr><td colSpan="3" style={{ textAlign: 'center', padding: 6 }}>
+                      <span style={{ fontSize: 9, color: 'var(--text-muted)', marginRight: 6 }}>{display.length}/{allStrikes.length}</span>
+                      <button onClick={() => setStrikeRange(r => r + 10)} style={{ padding: '2px 8px', fontSize: 8, fontWeight: 600, borderRadius: 3, border: '1px solid rgba(6,182,212,0.3)', background: 'rgba(6,182,212,0.08)', color: '#06b6d4', cursor: 'pointer', marginRight: 4 }}>+10</button>
+                      <button onClick={() => setStrikeRange(9999)} style={{ padding: '2px 8px', fontSize: 8, fontWeight: 600, borderRadius: 3, border: '1px solid rgba(6,182,212,0.3)', background: 'rgba(6,182,212,0.08)', color: '#06b6d4', cursor: 'pointer' }}>All</button>
+                    </td></tr>
+                  )}
+                </>
+              );
+            })()}
           </tbody>
         </table>
       </div>

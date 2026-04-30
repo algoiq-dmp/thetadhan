@@ -100,6 +100,17 @@ export default function OptionChainPopup({ symbol }) {
   const [product, setProduct] = useState('MIS');
   const [selectedStrikes, setSelectedStrikes] = useState(new Set());
   const [groupMode, setGroupMode] = useState(false);
+  const [strikeRange, setStrikeRange] = useState(20); // ATM ± N strikes
+
+  // Filter strikes around ATM
+  const displayStrikes = (() => {
+    if (!chain.strikes.length) return [];
+    const atmIdx = chain.strikes.findIndex(s => s.isATM);
+    if (atmIdx < 0 || strikeRange >= chain.strikes.length) return chain.strikes;
+    const start = Math.max(0, atmIdx - strikeRange);
+    const end = Math.min(chain.strikes.length, atmIdx + strikeRange + 1);
+    return chain.strikes.slice(start, end);
+  })();
 
   const handleClickLTP = (strike, side) => {
     setSelectedStrike(strike);
@@ -210,7 +221,7 @@ export default function OptionChainPopup({ symbol }) {
               </tr>
             </thead>
             <tbody>
-              {chain.strikes.map(s => (
+              {displayStrikes.map(s => (
                 <tr key={s.strike} className={s.isATM ? 'atm-row' : s.isDelta01 ? 'delta-row' : ''}>
                   {groupMode && (
                     <td style={{ textAlign: 'center' }}>
@@ -252,6 +263,28 @@ export default function OptionChainPopup({ symbol }) {
               ))}
             </tbody>
           </table>
+
+          {/* Load More / Load All */}
+          {chain.strikes.length > displayStrikes.length && (
+            <div style={{ textAlign: 'center', padding: '8px 0', borderTop: '1px solid var(--border)', display: 'flex', gap: 8, justifyContent: 'center' }}>
+              <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>
+                Showing {displayStrikes.length} of {chain.strikes.length} strikes
+              </span>
+              <button onClick={() => setStrikeRange(r => r + 10)}
+                style={{ padding: '3px 12px', fontSize: 10, fontWeight: 600, borderRadius: 4, border: '1px solid rgba(6,182,212,0.3)', background: 'rgba(6,182,212,0.08)', color: '#06b6d4', cursor: 'pointer' }}>
+                +10 More
+              </button>
+              <button onClick={() => setStrikeRange(9999)}
+                style={{ padding: '3px 12px', fontSize: 10, fontWeight: 600, borderRadius: 4, border: '1px solid rgba(6,182,212,0.3)', background: 'rgba(6,182,212,0.08)', color: '#06b6d4', cursor: 'pointer' }}>
+                Load All
+              </button>
+            </div>
+          )}
+          {chain.strikes.length > 0 && chain.strikes.length <= displayStrikes.length && (
+            <div style={{ textAlign: 'center', padding: '4px 0', fontSize: 9, color: 'var(--text-muted)' }}>
+              All {chain.strikes.length} strikes shown
+            </div>
+          )}
         </div>
 
         <div className="quick-order-strip">

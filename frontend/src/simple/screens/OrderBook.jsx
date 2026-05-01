@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import useAppStore from '../stores/useAppStore'
+import engineConnector from '../../services/engineConnector'
 import InlineSettings, { SField, SSel, SChk, GearBtn } from '../components/InlineSettings'
 import ContextMenu from '../components/ContextMenu'
 import { ConfirmDialog, ModifyOrderDialog } from '../components/ContextMenu'
@@ -185,7 +186,23 @@ export default function OrderBook() {
             : `Cancel order: ${confirmCancel.side} ${confirmCancel.symbol} ${confirmCancel.qty}@${confirmCancel.price}?\nOrder No: ${confirmCancel.orderNo}`}
           confirmLabel={confirmCancel === 'all' ? 'Cancel All' : 'Cancel Order'}
           danger={true}
-          onConfirm={() => setConfirmCancel(null)}
+          onConfirm={async () => {
+            const addMessage = useAppStore.getState().addMessage
+            if (confirmCancel === 'all') {
+              const openOrders = allOrders.filter(o => o.status === 'OPEN' || o.status === 'PENDING' || o.status === 'TRANSIT')
+              let ok = 0
+              for (const o of openOrders) {
+                if (o.orderNo) { const r = await engineConnector.cancelOrder(o.orderNo); if (r.success) ok++ }
+              }
+              addMessage('system', `Cancelled ${ok}/${openOrders.length} open orders`)
+            } else if (confirmCancel.orderNo) {
+              const r = await engineConnector.cancelOrder(confirmCancel.orderNo)
+              if (r.success) addMessage('order', `✓ Cancelled #${confirmCancel.orderNo}`)
+              else addMessage('rejection', `✗ Cancel failed: ${r.error}`)
+            }
+            setConfirmCancel(null)
+            refreshPortfolio()
+          }}
           onCancel={() => setConfirmCancel(null)}
         />
       )}

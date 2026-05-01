@@ -1,6 +1,6 @@
 import { useState } from 'react'
-// Depth data loaded dynamically via engineConnector
-const MOCK_DEPTH = { buy: [{qty:0,price:0},{qty:0,price:0},{qty:0,price:0},{qty:0,price:0},{qty:0,price:0}], sell: [{qty:0,price:0},{qty:0,price:0},{qty:0,price:0},{qty:0,price:0},{qty:0,price:0}] }
+import useAppStore from '../stores/useAppStore'
+import engineConnector from '../../services/engineConnector'
 
 export default function BracketOrder() {
   const [f, setF] = useState({
@@ -68,7 +68,20 @@ export default function BracketOrder() {
         </div>
       </div>
       <div style={{ display:'flex', gap:6, padding:'8px 10px', borderTop:'1px solid var(--border)' }}>
-        <button onClick={()=>alert('Bracket Order placed!')} style={{ flex:1, height:28, background: isBuy ? '#1565C0' : '#C62828', color:'#fff', border:'none', fontSize:11, fontWeight:700, cursor:'pointer' }}>
+        <button onClick={async () => {
+          const addMessage = useAppStore.getState().addMessage
+          const order = {
+            transactionType: f.side, exchangeSegment: 'NSE_FNO', productType: 'BO',
+            orderType: 'LIMIT', validity: 'DAY', securityId: f.symbol,
+            quantity: parseInt(f.qty) || 0, price: parseFloat(f.entryPrice) || 0,
+            triggerPrice: parseFloat(f.slPrice) || 0,
+            bookedProfitPrice: parseFloat(f.targetPrice) || 0,
+            trailingStopLoss: parseFloat(f.trailingSL) || 0,
+          }
+          const res = await engineConnector.placeOrder(order)
+          if (res.success) addMessage('order', `✓ Bracket ${f.side} placed: ${res.orderId}`)
+          else addMessage('rejection', `✗ Bracket order failed: ${res.error}`)
+        }} style={{ flex:1, height:28, background: isBuy ? '#1565C0' : '#C62828', color:'#fff', border:'none', fontSize:11, fontWeight:700, cursor:'pointer' }}>
           SUBMIT BRACKET {f.side}
         </button>
         <button style={{ height:28, padding:'0 12px', background:'#2a2a44', color:'#d0d0d8', border:'1px solid #3a3a5a', fontSize:10, cursor:'pointer' }}>Reset</button>

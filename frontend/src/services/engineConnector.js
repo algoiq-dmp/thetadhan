@@ -111,13 +111,44 @@ class EngineConnector {
   /** Place Order to Dhan */
   async placeOrder(order) {
     try {
-      const res = await fetch(`${this.apiUrl}/api/orders`, {
+      const res = await fetch(`${this.apiUrl}/api/orders/place`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('dhan_token')}` 
+          'Authorization': `Bearer ${localStorage.getItem('dhan_token')}`,
+          'X-Client-Id': localStorage.getItem('dhan_client_id')
         },
         body: JSON.stringify(order),
+      });
+      return res.json();
+    } catch (err) { return { success: false, error: err.message }; }
+  }
+
+  /** Cancel Order */
+  async cancelOrder(orderId) {
+    try {
+      const res = await fetch(`${this.apiUrl}/api/orders/cancel/${orderId}`, {
+        method: 'DELETE',
+        headers: { 
+          'Authorization': `Bearer ${localStorage.getItem('dhan_token')}`,
+          'X-Client-Id': localStorage.getItem('dhan_client_id')
+        },
+      });
+      return res.json();
+    } catch (err) { return { success: false, error: err.message }; }
+  }
+
+  /** Modify Order */
+  async modifyOrder(orderId, updates) {
+    try {
+      const res = await fetch(`${this.apiUrl}/api/orders/modify/${orderId}`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('dhan_token')}`,
+          'X-Client-Id': localStorage.getItem('dhan_client_id')
+        },
+        body: JSON.stringify(updates),
       });
       return res.json();
     } catch (err) { return { success: false, error: err.message }; }

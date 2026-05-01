@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import useAppStore from '../stores/useAppStore'
+import engineConnector from '../../services/engineConnector'
 
 export default function GridOrder() {
   const [f, setF] = useState({ symbol:'NIFTY', exchange:'NSE', instrument:'OPTIDX', expiry:'24-APR-2026', strike:'24200', optType:'CE',
@@ -50,7 +52,20 @@ export default function GridOrder() {
         </div>
       </div>
       <div style={{ display:'flex', gap:6, padding:'6px 10px', borderTop:'1px solid var(--border)' }}>
-        <button onClick={()=>alert(`Grid Order: ${count} levels placed!`)} style={{ flex:1, height:26, background:'#22c55e', color:'#000', border:'none', fontSize:10, fontWeight:700, cursor:'pointer' }}>⚡ Place Grid Order ({count} levels)</button>
+        <button onClick={async () => {
+          const addMessage = useAppStore.getState().addMessage
+          let ok = 0, fail = 0
+          for (const g of grids) {
+            const order = {
+              transactionType: f.side, exchangeSegment: 'NSE_FNO', productType: f.product === 'MIS' ? 'INTRADAY' : 'MARGIN',
+              orderType: 'LIMIT', validity: 'DAY', securityId: f.symbol,
+              quantity: g.qty, price: parseFloat(g.price),
+            }
+            const res = await engineConnector.placeOrder(order)
+            if (res.success) ok++; else fail++
+          }
+          addMessage('order', `Grid: ${ok} placed, ${fail} failed out of ${count} levels`)
+        }} style={{ flex:1, height:26, background:'#22c55e', color:'#000', border:'none', fontSize:10, fontWeight:700, cursor:'pointer' }}>⚡ Place Grid Order ({count} levels)</button>
       </div>
     </div>
   )

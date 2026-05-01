@@ -1,16 +1,39 @@
+import { useState, useEffect } from 'react'
 import useAppStore from '../stores/useAppStore'
-// Depth data loaded dynamically via engineConnector
-const MOCK_DEPTH = { buy: [{qty:0,price:0},{qty:0,price:0},{qty:0,price:0},{qty:0,price:0},{qty:0,price:0}], sell: [{qty:0,price:0},{qty:0,price:0},{qty:0,price:0},{qty:0,price:0},{qty:0,price:0}] }
+import engineConnector from '../../services/engineConnector'
+
+const EMPTY_DEPTH = { buy: Array(5).fill({qty:0,price:0}), sell: Array(5).fill({qty:0,price:0}) }
 
 export default function MarketPicture() {
   const symbols = useAppStore(s => s.symbols)
   const selectedToken = useAppStore(s => s.selectedToken)
-  const sym = symbols.find(s => s.token === selectedToken) || symbols[7]
+  const sym = symbols.find(s => s.token === selectedToken) || symbols[0] || { symbol:'—', ltp:0, chg:0, chgP:0, open:0, high:0, low:0, close:0, vol:0, atp:0, oi:0, oiChg:0, totalBuyQty:0, totalSellQty:0, w52High:0, w52Low:0, upperCkt:0, lowerCkt:0, turnover:0 }
+  const [depth, setDepth] = useState(EMPTY_DEPTH)
+
+  // Load live depth
+  useEffect(() => {
+    if (!sym?.securityId && !sym?.token) return
+    const loadDepth = async () => {
+      const seg = sym.exchange_segment || 'NSE_FNO'
+      const id = String(sym.securityId || sym.token)
+      const data = await engineConnector.getFullQuote({ [seg]: [id] })
+      if (data && data[seg] && data[seg][id] && data[seg][id].depth) {
+        const q = data[seg][id]
+        setDepth({
+          buy: (q.depth.buy || []).slice(0,5).map(d => ({ qty: d.quantity || 0, price: d.price || 0 })),
+          sell: (q.depth.sell || []).slice(0,5).map(d => ({ qty: d.quantity || 0, price: d.price || 0 })),
+        })
+      }
+    }
+    loadDepth()
+    const timer = setInterval(loadDepth, 5000)
+    return () => clearInterval(timer)
+  }, [sym?.token])
 
   const chgClass = sym.chg >= 0 ? 'price-up' : 'price-down'
-  const totalBuy = MOCK_DEPTH.buy.reduce((a, b) => a + b.qty, 0)
-  const totalSell = MOCK_DEPTH.sell.reduce((a, b) => a + b.qty, 0)
-  const tradedVal = sym.vol * sym.atp
+  const totalBuy = depth.buy.reduce((a, b) => a + b.qty, 0)
+  const totalSell = depth.sell.reduce((a, b) => a + b.qty, 0)
+  const tradedVal = (sym.vol || 0) * (sym.atp || 0)
 
   const rowStyle = {
     display: 'flex', justifyContent: 'space-between', padding: '3px 10px',
@@ -100,12 +123,12 @@ export default function MarketPicture() {
             </tr>
           </thead>
           <tbody>
-            {MOCK_DEPTH.buy.map((b, i) => (
+            {depth.buy.map((b, i) => (
               <tr key={i} style={{ borderBottom: '1px solid rgba(42,42,68,0.3)' }}>
                 <td style={{ textAlign: 'right', padding: '2px 6px', height: 20 }}>{b.qty}</td>
-                <td style={{ textAlign: 'right', padding: '2px 6px', color: '#4dabf7', fontWeight: 600 }}>{b.price.toFixed(2)}</td>
-                <td style={{ textAlign: 'right', padding: '2px 6px', color: '#ff6b6b', fontWeight: 600 }}>{MOCK_DEPTH.sell[i].price.toFixed(2)}</td>
-                <td style={{ textAlign: 'right', padding: '2px 6px' }}>{MOCK_DEPTH.sell[i].qty}</td>
+                <td style={{ textAlign: 'right', padding: '2px 6px', color: '#4dabf7', fontWeight: 600 }}>{b.price > 0 ? b.price.toFixed(2) : '—'}</td>
+                <td style={{ textAlign: 'right', padding: '2px 6px', color: '#ff6b6b', fontWeight: 600 }}>{depth.sell[i]?.price > 0 ? depth.sell[i].price.toFixed(2) : '—'}</td>
+                <td style={{ textAlign: 'right', padding: '2px 6px' }}>{depth.sell[i]?.qty || 0}</td>
               </tr>
             ))}
           </tbody>

@@ -1,18 +1,43 @@
+import { useState, useEffect } from 'react'
 import useAppStore from '../stores/useAppStore'
-// Depth data loaded dynamically via engineConnector
-const MOCK_DEPTH = { buy: [{qty:0,price:0},{qty:0,price:0},{qty:0,price:0},{qty:0,price:0},{qty:0,price:0}], sell: [{qty:0,price:0},{qty:0,price:0},{qty:0,price:0},{qty:0,price:0},{qty:0,price:0}] }
+import engineConnector from '../../services/engineConnector'
+
+const EMPTY_DEPTH = { buy: Array(5).fill({qty:0,price:0}), sell: Array(5).fill({qty:0,price:0}) }
 
 export default function MarketDepth() {
   const symbols = useAppStore(s => s.symbols)
   const selectedToken = useAppStore(s => s.selectedToken)
   const openWindow = useAppStore(s => s.openWindow)
   const sym = symbols.find(s => s.token === selectedToken) || symbols[0]
+  const [depth, setDepth] = useState(EMPTY_DEPTH)
 
-  const maxQty = Math.max(...MOCK_DEPTH.buy.map(d => d.qty), ...MOCK_DEPTH.sell.map(d => d.qty))
-  const totalBuy = MOCK_DEPTH.buy.reduce((a, b) => a + b.qty, 0)
-  const totalSell = MOCK_DEPTH.sell.reduce((a, b) => a + b.qty, 0)
-  const buyPercent = Math.round(totalBuy / (totalBuy + totalSell) * 100)
-  const spread = (MOCK_DEPTH.sell[0].price - MOCK_DEPTH.buy[0].price).toFixed(2)
+  // Load live depth
+  useEffect(() => {
+    if (!sym?.securityId && !sym?.token) return
+    const loadDepth = async () => {
+      const seg = sym.exchange_segment || 'NSE_FNO'
+      const id = String(sym.securityId || sym.token)
+      const data = await engineConnector.getFullQuote({ [seg]: [id] })
+      if (data && data[seg] && data[seg][id]) {
+        const q = data[seg][id]
+        if (q.depth) {
+          setDepth({
+            buy: (q.depth.buy || []).slice(0,5).map(d => ({ qty: d.quantity || 0, price: d.price || 0 })),
+            sell: (q.depth.sell || []).slice(0,5).map(d => ({ qty: d.quantity || 0, price: d.price || 0 })),
+          })
+        }
+      }
+    }
+    loadDepth()
+    const timer = setInterval(loadDepth, 3000)
+    return () => clearInterval(timer)
+  }, [sym?.token])
+
+  const maxQty = Math.max(1, ...depth.buy.map(d => d.qty), ...depth.sell.map(d => d.qty))
+  const totalBuy = depth.buy.reduce((a, b) => a + b.qty, 0)
+  const totalSell = depth.sell.reduce((a, b) => a + b.qty, 0)
+  const buyPercent = totalBuy + totalSell > 0 ? Math.round(totalBuy / (totalBuy + totalSell) * 100) : 50
+  const spread = (depth.sell[0].price - depth.buy[0].price).toFixed(2)
 
   // Click depth price → open order pre-filled
   const onPriceClick = (price, side) => {

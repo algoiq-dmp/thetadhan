@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import useAppStore from '../stores/useAppStore'
+import engineConnector from '../../services/engineConnector'
 import ActionIcon from '../components/ActionIcons'
 
 export default function SpreadOrder() {
@@ -53,7 +55,17 @@ export default function SpreadOrder() {
         </div>
       </div>
       <div style={{ display:'flex', gap:6, padding:'8px 10px', borderTop:'1px solid var(--border)' }}>
-        <button onClick={()=>alert('Spread Order placed!')} style={{ flex:1, height:28, background:'linear-gradient(90deg, #1565C0, #7c4dff)', color:'#fff', border:'none', fontSize:11, fontWeight:700, cursor:'pointer' }}>
+        <button onClick={async () => {
+          const addMessage = useAppStore.getState().addMessage
+          const mkOrder = (leg) => ({
+            transactionType: leg.side, exchangeSegment: 'NSE_FNO', productType: 'INTRADAY',
+            orderType: leg.orderType, validity: 'DAY', securityId: leg.symbol,
+            quantity: parseInt(leg.qty) || 0, price: parseFloat(leg.price) || 0,
+          })
+          const [r1, r2] = await Promise.all([engineConnector.placeOrder(mkOrder(leg1)), engineConnector.placeOrder(mkOrder(leg2))])
+          if (r1.success && r2.success) addMessage('order', `✓ Spread placed: Leg1=${r1.orderId}, Leg2=${r2.orderId}`)
+          else addMessage('rejection', `✗ Spread failed: ${r1.error || ''} ${r2.error || ''}`)
+        }} style={{ flex:1, height:28, background:'linear-gradient(90deg, #1565C0, #7c4dff)', color:'#fff', border:'none', fontSize:11, fontWeight:700, cursor:'pointer' }}>
           SUBMIT SPREAD ORDER
         </button>
         <ActionIcon type="reset" tooltip="Reset" />

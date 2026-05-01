@@ -1,18 +1,20 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import useAppStore from '../stores/useAppStore'
 import InlineSettings, { SField, SSel, SChk, GearBtn } from '../components/InlineSettings'
 import { exportGridCSV } from '../utils/gridUtils'
 import ActionIcon, { ActionIconRow } from '../components/ActionIcons'
 
-const MOCK_PORTFOLIO = [
-  { symbol: 'NIFTY 24200CE', type: 'CE', qty: 50, avg: 142.00, ltp: 145.50, delta: 0.55, gamma: 0.003, theta: -12.5, vega: 8.25, iv: 15.2, pnl: 17500 },
-  { symbol: 'NIFTY 24200PE', type: 'PE', qty: -50, avg: 58.00, ltp: 55.00, delta: 0.45, gamma: 0.003, theta: -10.8, vega: 7.50, iv: 16.5, pnl: 15000 },
-  { symbol: 'NIFTY 24300CE', type: 'CE', qty: -100, avg: 95.00, ltp: 92.50, delta: -0.42, gamma: -0.003, theta: 11.2, vega: -7.80, iv: 14.8, pnl: 25000 },
-  { symbol: 'BANKNIFTY 52000PE', type: 'PE', qty: 100, avg: 85.00, ltp: 78.50, delta: 0.38, gamma: 0.002, theta: -15.2, vega: 12.00, iv: 18.2, pnl: -65000 },
-]
-
 export default function PortfolioAnalysis() {
-  const [positions, setPositions] = useState(MOCK_PORTFOLIO)
+  const livePositions = useAppStore(s => s.positions)
+  const refreshPortfolio = useAppStore(s => s.refreshPortfolio)
+  useEffect(() => { refreshPortfolio() }, [])
+  const mappedPositions = livePositions.map(p => ({
+    symbol: p.symbol, type: p.optionType || 'FUT', qty: p.netQty || 0,
+    avg: p.avgPrice || 0, ltp: p.ltp || 0, delta: 0, gamma: 0, theta: 0, vega: 0,
+    iv: 0, pnl: p.pnl || 0
+  }))
+  const [positions, setPositions] = useState(mappedPositions)
+  useEffect(() => { setPositions(mappedPositions) }, [livePositions])
   const [showAdd, setShowAdd] = useState(false)
   const [newPos, setNewPos] = useState({ symbol: '', type: 'CE', qty: '', avg: '' })
   const [showSettings, setShowSettings] = useState(false)

@@ -98,8 +98,8 @@ export default function MarketDepth() {
             </tr>
           </thead>
           <tbody>
-            {MOCK_DEPTH.buy.map((b, i) => {
-              const s = MOCK_DEPTH.sell[i]
+            {depth.buy.map((b, i) => {
+              const s = depth.sell[i]
               return (
                 <tr key={i} style={{ borderBottom: '1px solid rgba(42,42,68,0.4)' }}>
                   <td style={{ textAlign: 'right', padding: '4px 6px', color: '#6a6a7a', fontSize: 9 }}>

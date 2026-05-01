@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import useAppStore from '../stores/useAppStore'
 import MarketWatch from './MarketWatch'
 
 const LAYOUTS = [
@@ -7,17 +8,9 @@ const LAYOUTS = [
   { id: '4col', label: '4 Panels', cols: 4 },
 ]
 
-const MOCK_MESSAGES = [
-  { time: '09:15:33', type: 'trade', msg: '✅ Trade: BUY NIFTY 24200CE 50@142.00 — Trade#TRD001' },
-  { time: '09:20:16', type: 'trade', msg: '✅ Trade: SELL RELIANCE 250@2540.50 — Trade#TRD002' },
-  { time: '10:05:42', type: 'info', msg: 'ℹ Order placed: BUY INFY 600@1520.00 LMT — Order#25042' },
-  { time: '11:15:05', type: 'error', msg: '✕ REJECTED: BUY HDFCBANK 550@1680.00 — Insufficient margin' },
-  { time: '11:30:00', type: 'warning', msg: '⚠ Exchange: Pre-close session begins at 15:40' },
-  { time: '12:00:00', type: 'success', msg: '✅ System: Market data refreshed — 220 symbols active' },
-  { time: '13:10:36', type: 'trade', msg: '✅ Trade: BUY TATAMOTORS 1425@678.50 MKT — Trade#TRD005' },
-]
 
 export default function MultiMW() {
+  const messages = useAppStore(s => s.messages) || []
   const [layout, setLayout] = useState('4col')
   const cols = LAYOUTS.find(l => l.id === layout)?.cols || 4
   const [msgOpen, setMsgOpen] = useState(true)
@@ -79,9 +72,9 @@ export default function MultiMW() {
           overflow: 'auto', padding: '2px 0',
         }}>
           <div style={{ padding: '2px 8px', fontSize: 9, color: 'var(--accent)', fontWeight: 600, borderBottom: '1px solid var(--border)' }}>
-            📨 Messages — {MOCK_MESSAGES.length} entries
+            📨 Messages — {messages.length} entries
           </div>
-          {MOCK_MESSAGES.map((m, i) => (
+          {messages.slice(-30).reverse().map((m, i) => (
             <div key={i} style={{
               padding: '1px 8px', fontSize: 9, display: 'flex', gap: 8,
               borderBottom: '1px solid rgba(42,42,68,0.15)',

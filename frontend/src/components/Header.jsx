@@ -3,7 +3,7 @@ import useMarketStore from '../store/useMarketStore';
 import useAuthStore from '../store/useAuthStore';
 import useSocket from '../hooks/useSocket';
 
-export default function Header({ searchRef, onOpenEngineSettings, onOpenHelp }) {
+export default function Header({ searchRef, onOpenEngineSettings, onOpenHelp, onOpenPositions, onOpenOrders }) {
   const { theme, engines } = useMarketStore();
   const toggleTheme = useMarketStore(s => s.toggleTheme);
   const toggleFullscreen = useMarketStore(s => s.toggleFullscreen);
@@ -57,7 +57,7 @@ export default function Header({ searchRef, onOpenEngineSettings, onOpenHelp }) 
 
       <div className="header-right">
         <button className={`icon-btn${activePanel === 'scanners' ? ' active' : ''}`} onClick={() => setActivePanel('scanners')} title="Scanner (F9)">🔍</button>
-        <button className={`icon-btn${activePanel === 'positions' ? ' active' : ''}`} onClick={() => setActivePanel('positions')} title="Positions (F7)">📊</button>
+        <button className="icon-btn" onClick={onOpenPositions} title="Net Position (F7)">📊</button>
         <button className={`icon-btn${showQuickFire ? ' active' : ''}`} onClick={toggleQuickFire} title="Quick Fire (⚡)">⚡</button>
         <div className="separator" />
         <button className="icon-btn" onClick={toggleTheme} title="Toggle Theme (D)">

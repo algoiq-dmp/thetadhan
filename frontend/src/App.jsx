@@ -178,8 +178,7 @@ export default function App() {
           break;
         case 'F7':
           e.preventDefault();
-          if (e.altKey) setShowPositionPopup(true);
-          else setActivePanel('positions');
+          setShowPositionPopup(true);
           break;
         case 'F8':
           e.preventDefault();
@@ -422,7 +421,7 @@ export default function App() {
 
   return !isAuthenticated ? <LoginPage /> : (
     <div className={`app-layout${isFullscreen ? ' fullscreen' : ''}`}>
-      <Header searchRef={searchRef} onOpenEngineSettings={() => setShowEngineSettings(true)} onOpenHelp={() => setShowHelp(true)} />
+      <Header searchRef={searchRef} onOpenEngineSettings={() => setShowEngineSettings(true)} onOpenHelp={() => setShowHelp(true)} onOpenPositions={() => setShowPositionPopup(true)} onOpenOrders={() => setShowOrderBookPopup(true)} />
       <Toolbar searchRef={searchRef} onAddScrip={() => setShowAddScrip(true)} />
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         {/* V4: Left Navigation Bar */}

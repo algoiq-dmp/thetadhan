@@ -66,6 +66,8 @@ export default function App() {
   const [showPositionPopup, setShowPositionPopup] = useState(false);
   const [showTradeBookPopup, setShowTradeBookPopup] = useState(false);
   const [showOrderBookPopup, setShowOrderBookPopup] = useState(false);
+  const [showMarketDepthPopup, setShowMarketDepthPopup] = useState(false);
+  const [showOrderEntryPopup, setShowOrderEntryPopup] = useState(false);
 
   // Restore Dhan session on page load (Bug #7 fix)
   useEffect(() => {
@@ -173,8 +175,16 @@ export default function App() {
           break;
         case 'F5':
           e.preventDefault();
-          useMarketStore.getState().connectEngines().then(() => useMarketStore.getState().startLTPPolling());
-          { const toast = document.createElement('div'); toast.textContent = '🔄 Refreshing all data...'; toast.style.cssText = 'position:fixed;top:60px;right:20px;z-index:99999;padding:10px 18px;background:#10b981;color:#fff;border-radius:6px;font-size:12px;font-weight:600;'; document.body.appendChild(toast); setTimeout(() => toast.remove(), 2000); }
+          if (e.ctrlKey) {
+            useMarketStore.getState().connectEngines().then(() => useMarketStore.getState().startLTPPolling());
+            { const toast = document.createElement('div'); toast.textContent = '🔄 Refreshing all data...'; toast.style.cssText = 'position:fixed;top:60px;right:20px;z-index:99999;padding:10px 18px;background:#10b981;color:#fff;border-radius:6px;font-size:12px;font-weight:600;'; document.body.appendChild(toast); setTimeout(() => toast.remove(), 2000); }
+          } else {
+            setShowMarketDepthPopup(true);
+          }
+          break;
+        case 'F6':
+          e.preventDefault();
+          setShowOrderEntryPopup(true);
           break;
         case 'F7':
           e.preventDefault();
@@ -205,6 +215,8 @@ export default function App() {
           setShowPositionPopup(false);
           setShowTradeBookPopup(false);
           setShowOrderBookPopup(false);
+          setShowMarketDepthPopup(false);
+          setShowOrderEntryPopup(false);
           break;
         case '+':
         case '=':
@@ -503,6 +515,87 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* Market Depth / Snap Quote Popup (F5) */}
+      {showMarketDepthPopup && (() => {
+        const sel = getFiltered()[selectedIdx];
+        return (
+          <div className="modal-overlay" onClick={() => setShowMarketDepthPopup(false)}>
+            <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: 520 }}>
+              <div className="modal-header">
+                <div className="modal-title">📊 Market Depth — {sel?.symbol || 'N/A'}</div>
+                <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                  <span className="kbd" style={{ fontSize: 10 }}>F5</span>
+                  <button className="modal-close" onClick={() => setShowMarketDepthPopup(false)}>✕</button>
+                </div>
+              </div>
+              <div className="modal-body" style={{ padding: 16 }}>
+                {sel ? (
+                  <>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+                      <div>
+                        <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-heading)', fontFamily: 'var(--font-mono)' }}>{(sel.ltp || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+                        <div style={{ fontSize: 13, color: (sel.changePct || 0) >= 0 ? 'var(--green)' : 'var(--red)', fontWeight: 600 }}>{(sel.changePct || 0) >= 0 ? '+' : ''}{(sel.change || 0).toFixed(2)} ({(sel.changePct || 0).toFixed(2)}%)</div>
+                      </div>
+                      <div style={{ textAlign: 'right', fontSize: 12, color: 'var(--text-muted)' }}>
+                        <div>{sel.exchange_segment === 'IDX_I' ? 'NSE INDEX' : sel.exchange_segment === 'BSE_INDEX' ? 'BSE INDEX' : 'NSE'}</div>
+                        <div>Lot: {sel.lotSize || '-'} | Sector: {sel.sector || '-'}</div>
+                      </div>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+                      {[['Open', ((sel.ltp || 0) - (sel.change || 0)).toFixed(2)], ['Prev Close', (sel.prevClose || 0).toFixed(2)], ['High', (sel.todayHigh || 0).toFixed(2)], ['Low', (sel.todayLow || 0).toFixed(2)], ['Volume', (sel.volume || 0).toLocaleString()], ['OI', (sel.oi || 0).toLocaleString()], ['30 SMA', (sel.sma30 || 0).toFixed(2)], ['200 SMA', (sel.sma200 || 0).toFixed(2)]].map(([k, v]) => (
+                        <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--border)', fontSize: 12 }}>
+                          <span style={{ color: 'var(--text-muted)' }}>{k}</span>
+                          <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{v}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button className="btn-buy" onClick={() => { setShowMarketDepthPopup(false); openOrderEntry({ symbol: sel.symbol, side: 'BUY', price: sel.ltp }); }} style={{ flex: 1 }}>BUY F1</button>
+                      <button className="btn-sell" onClick={() => { setShowMarketDepthPopup(false); openOrderEntry({ symbol: sel.symbol, side: 'SELL', price: sel.ltp }); }} style={{ flex: 1 }}>SELL F2</button>
+                    </div>
+                  </>
+                ) : <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 20 }}>No symbol selected</div>}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Order Entry Popup (F6) */}
+      {showOrderEntryPopup && (() => {
+        const sel = getFiltered()[selectedIdx];
+        return (
+          <div className="modal-overlay" onClick={() => setShowOrderEntryPopup(false)}>
+            <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: 440 }}>
+              <div className="modal-header">
+                <div className="modal-title">📝 Order Entry — {sel?.symbol || 'N/A'}</div>
+                <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                  <span className="kbd" style={{ fontSize: 10 }}>F6</span>
+                  <button className="modal-close" onClick={() => setShowOrderEntryPopup(false)}>✕</button>
+                </div>
+              </div>
+              <div className="modal-body" style={{ padding: 16 }}>
+                {sel ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    <div style={{ textAlign: 'center', marginBottom: 4 }}>
+                      <span style={{ fontSize: 18, fontWeight: 700, fontFamily: 'var(--font-mono)', color: 'var(--text-heading)' }}>{(sel.ltp || 0).toFixed(2)}</span>
+                      <span style={{ fontSize: 12, color: (sel.changePct || 0) >= 0 ? 'var(--green)' : 'var(--red)', marginLeft: 8 }}>{(sel.changePct || 0) >= 0 ? '+' : ''}{(sel.changePct || 0).toFixed(2)}%</span>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                      <button className="btn-buy" onClick={() => { setShowOrderEntryPopup(false); openOrderEntry({ symbol: sel.symbol, side: 'BUY', price: sel.ltp }); }} style={{ height: 44, fontSize: 14 }}>BUY</button>
+                      <button className="btn-sell" onClick={() => { setShowOrderEntryPopup(false); openOrderEntry({ symbol: sel.symbol, side: 'SELL', price: sel.ltp }); }} style={{ height: 44, fontSize: 14 }}>SELL</button>
+                    </div>
+                    <div style={{ fontSize: 10, color: 'var(--text-muted)', textAlign: 'center' }}>
+                      <span className="kbd">F1</span> Buy • <span className="kbd">F2</span> Sell • <span className="kbd">+</span> Buy • <span className="kbd">-</span> Sell
+                    </div>
+                  </div>
+                ) : <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 20 }}>No symbol selected</div>}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       <ToastContainer />
     </div>

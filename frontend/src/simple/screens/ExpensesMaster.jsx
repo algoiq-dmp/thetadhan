@@ -12,15 +12,7 @@ const SEGMENTS = {
   'Commodity':        { brokerage: 0.03, stt: 0.01, exchange: 0.003, gst: 18, sebi: 0.0001, stamp: 0.002, dp: 0 },
 }
 
-const MOCK_TRADES = [
-  { symbol: 'NIFTY 24200CE', segment: 'F&O Options', side: 'BUY', qty: 50, price: 142.00, turnover: 7100 },
-  { symbol: 'RELIANCE', segment: 'Equity Intraday', side: 'SELL', qty: 250, price: 2540.50, turnover: 635125 },
-  { symbol: 'NIFTY 24300CE', segment: 'F&O Options', side: 'SELL', qty: 100, price: 95.00, turnover: 9500 },
-  { symbol: 'SBIN', segment: 'Equity Delivery', side: 'BUY', qty: 750, price: 824.00, turnover: 618000 },
-  { symbol: 'TATAMOTORS', segment: 'Equity Intraday', side: 'BUY', qty: 1425, price: 678.50, turnover: 966862 },
-  { symbol: 'INFY', segment: 'Equity Delivery', side: 'BUY', qty: 600, price: 1521.00, turnover: 912600 },
-  { symbol: 'BANKNIFTY FUT', segment: 'F&O Futures', side: 'BUY', qty: 100, price: 52145.00, turnover: 5214500 },
-]
+
 
 function calcCharges(trade) {
   const rates = SEGMENTS[trade.segment]
@@ -39,16 +31,26 @@ function calcCharges(trade) {
 }
 
 export default function ExpensesMaster() {
+  const storeTrades = useAppStore(s => s.trades) || []
   const [tab, setTab] = useState('analysis')
 
   // Editable rates
   const [rates, setRates] = useState(SEGMENTS)
   const setRate = (seg, key, val) => setRates(prev => ({...prev, [seg]: {...prev[seg], [key]: parseFloat(val) || 0 }}))
 
+  // Map live trades to expense format
+  const liveTrades = storeTrades.map(t => {
+    const isOpt = t.symbol?.includes('CE') || t.symbol?.includes('PE')
+    const isFut = t.symbol?.includes('FUT')
+    const segment = isOpt ? 'F&O Options' : isFut ? 'F&O Futures' : t.product === 'INTRADAY' ? 'Equity Intraday' : 'Equity Delivery'
+    const turnover = (t.qty || 0) * (t.price || 0)
+    return { symbol: t.symbol, segment, side: t.side, qty: t.qty || 0, price: t.price || 0, turnover }
+  })
+
   // Calculate all
-  const tradeCharges = MOCK_TRADES.map(t => ({ ...t, charges: calcCharges(t) }))
+  const tradeCharges = liveTrades.map(t => ({ ...t, charges: calcCharges(t) }))
   const totalCharges = tradeCharges.reduce((sum, t) => sum + (t.charges.total || 0), 0)
-  const totalTurnover = MOCK_TRADES.reduce((sum, t) => sum + t.turnover, 0)
+  const totalTurnover = liveTrades.reduce((sum, t) => sum + t.turnover, 0)
   const totalBrokerage = tradeCharges.reduce((s, t) => s + (t.charges.brokerage || 0), 0)
   const totalSTT = tradeCharges.reduce((s, t) => s + (t.charges.stt || 0), 0)
   const totalGST = tradeCharges.reduce((s, t) => s + (t.charges.gst || 0), 0)

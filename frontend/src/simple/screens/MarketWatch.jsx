@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react'
 import useAppStore from '../stores/useAppStore'
 import InlineSettings, { SField, SSel, SChk, GearBtn } from '../components/InlineSettings'
 import ContextMenu from '../components/ContextMenu'
-import { PORTFOLIO_REGISTRY } from '../mock/portfolios'
+import { PORTFOLIO_FILTERS } from '../utils/portfolioFilters'
 import ActionIcon from '../components/ActionIcons'
 import ContractDetailPopup from '../components/ContractDetailPopup'
 
@@ -41,7 +41,7 @@ const ALL_COLUMNS = [
 ]
 
 const DEFAULT_VISIBLE = ['symbol', 'exchange', 'ltp', 'chg', 'chgP', 'open', 'high', 'low', 'close', 'bid', 'ask', 'vol', 'oi']
-const BUILTIN_NAMES = Object.keys(PORTFOLIO_REGISTRY)
+const BUILTIN_NAMES = Object.keys(PORTFOLIO_FILTERS)
 const loadCustomPortfolios = () => { try { return JSON.parse(localStorage.getItem('lightz-custom-portfolios')) || {} } catch { return {} } }
 const saveCustomPortfolios = (p) => localStorage.setItem('lightz-custom-portfolios', JSON.stringify(p))
 const EXCHANGE_FILTERS = ['ALL', 'NSE', 'BSE', 'MCX']
@@ -118,7 +118,13 @@ export default function MarketWatch({ mwId = 1 }) {
   const setMw = (k, v) => setMwSettings(p => ({ ...p, [k]: v }))
 
   // Get active symbols from portfolio, removing deleted ones
-  const rawSymbols = portfolio === 'Default' ? storeSymbols : (customPortfolios[portfolio] || PORTFOLIO_REGISTRY[portfolio] || storeSymbols)
+  const rawSymbols = (() => {
+    if (portfolio === 'Default') return storeSymbols
+    if (customPortfolios[portfolio]) return customPortfolios[portfolio]
+    const filter = PORTFOLIO_FILTERS[portfolio]
+    if (filter) return storeSymbols.filter(filter)
+    return storeSymbols
+  })()
   const activeSymbols = rawSymbols.filter(s => !removedTokens.includes(s.token))
 
   // Apply filters

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import useAppStore from '../stores/useAppStore'
 import { exportGridCSV, SortTh, sortGridData } from '../utils/gridUtils'
 import ActionIcon from '../components/ActionIcons'
 
@@ -17,22 +18,13 @@ const SCAN_PRESETS = [
   { id: 'delivery_high', name: 'Delivery % > 60%', category: 'Volume', icon: '📦' },
 ]
 
-const MOCK_RESULTS = [
-  { time: '14:32:15', symbol: 'ADANIENT', exchange: 'NSE', scan: 'Volume Spike > 3x Avg', value: '4.2x avg', ltp: 2850, chgP: 3.2 },
-  { time: '14:28:42', symbol: 'TATAMOTORS', exchange: 'NSE', scan: '52-Week High Breakout', value: '₹712 (prev: ₹698)', ltp: 712, chgP: 2.8 },
-  { time: '14:25:10', symbol: 'NIFTY 24200PE', exchange: 'NSE', scan: 'IV Crush < 15%', value: 'IV: 12.8%', ltp: 58, chgP: -18.5 },
-  { time: '14:22:05', symbol: 'SBIN', exchange: 'NSE', scan: 'OI Buildup > 10%', value: '+15.2% OI', ltp: 780, chgP: 2.1 },
-  { time: '14:18:30', symbol: 'RELIANCE', exchange: 'NSE', scan: 'Block Deal > ₹5Cr', value: '₹12.5Cr block', ltp: 2540, chgP: 1.2 },
-  { time: '14:15:22', symbol: 'BANKNIFTY FUT', exchange: 'NSE', scan: 'Gap Up > 2%', value: '+2.4% gap', ltp: 51520, chgP: 2.4 },
-  { time: '14:12:08', symbol: 'WIPRO', exchange: 'NSE', scan: 'Gap Down > 2%', value: '-2.8% gap', ltp: 450, chgP: -2.8 },
-  { time: '14:08:55', symbol: 'NIFTY 24400CE', exchange: 'NSE', scan: 'IV > 30% (Options)', value: 'IV: 34.2%', ltp: 28, chgP: 15.5 },
-  { time: '14:05:12', symbol: 'HDFCBANK', exchange: 'NSE', scan: 'Delivery % > 60%', value: '68.5% delivery', ltp: 1580, chgP: 0.8 },
-  { time: '14:02:40', symbol: 'ITC', exchange: 'NSE', scan: 'PCR > 1.5 or < 0.5', value: 'PCR: 1.72', ltp: 430, chgP: -0.2 },
-]
+
+
 
 export default function EventScanner() {
+  const symbols = useAppStore(s => s.symbols)
   const [activeScans, setActiveScans] = useState(['vol_spike', 'oi_buildup', '52w_high', 'high_iv'])
-  const [results, setResults] = useState(MOCK_RESULTS)
+  const [results, setResults] = useState([])
   const [filter, setFilter] = useState('ALL')
   const [isScanning, setIsScanning] = useState(true)
   const [sortKey, setSortKey] = useState(null)
@@ -42,25 +34,37 @@ export default function EventScanner() {
   const toggleScan = (id) => setActiveScans(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id])
   const categories = ['ALL', ...new Set(SCAN_PRESETS.map(s => s.category))]
 
-  // Simulate live scanning
+  // Live scanning using real symbols from store
   useEffect(() => {
-    if (!isScanning) return
+    if (!isScanning || symbols.length === 0) return
     const iv = setInterval(() => {
-      const preset = SCAN_PRESETS[Math.floor(Math.random() * SCAN_PRESETS.length)]
-      const symbols = ['RELIANCE', 'TCS', 'INFY', 'HDFCBANK', 'SBIN', 'ICICIBANK', 'NIFTY FUT', 'BANKNIFTY FUT']
-      const newResult = {
-        time: new Date().toLocaleTimeString('en-IN', { hour12: false }),
-        symbol: symbols[Math.floor(Math.random() * symbols.length)],
-        exchange: 'NSE',
-        scan: preset.name,
-        value: 'Live scan',
-        ltp: (1000 + Math.random() * 3000).toFixed(2),
-        chgP: ((Math.random() - 0.4) * 6).toFixed(2),
-      }
-      setResults(p => [newResult, ...p].slice(0, 50))
-    }, 8000)
+      // Scan live symbols for conditions
+      const scannedResults = []
+      symbols.forEach(s => {
+        if (!s.ltp || s.ltp === 0) return
+        const chgP = s.chgP || 0
+        const vol = s.vol || 0
+        // Gap up > 2%
+        if (activeScans.includes('gap_up') && chgP > 2) {
+          scannedResults.push({ time: new Date().toLocaleTimeString('en-IN', { hour12: false }), symbol: s.symbol, exchange: 'NSE', scan: 'Gap Up > 2%', value: `+${chgP.toFixed(1)}%`, ltp: s.ltp, chgP: chgP.toFixed(2) })
+        }
+        // Gap down > 2%
+        if (activeScans.includes('gap_down') && chgP < -2) {
+          scannedResults.push({ time: new Date().toLocaleTimeString('en-IN', { hour12: false }), symbol: s.symbol, exchange: 'NSE', scan: 'Gap Down > 2%', value: `${chgP.toFixed(1)}%`, ltp: s.ltp, chgP: chgP.toFixed(2) })
+        }
+        // Volume spike
+        if (activeScans.includes('vol_spike') && vol > 5000000) {
+          scannedResults.push({ time: new Date().toLocaleTimeString('en-IN', { hour12: false }), symbol: s.symbol, exchange: 'NSE', scan: 'Volume Spike > 3x Avg', value: `${(vol/100000).toFixed(1)}L`, ltp: s.ltp, chgP: chgP.toFixed(2) })
+        }
+        // OI buildup
+        if (activeScans.includes('oi_buildup') && s.oi > 10000000 && s.oiChg > 0) {
+          scannedResults.push({ time: new Date().toLocaleTimeString('en-IN', { hour12: false }), symbol: s.symbol, exchange: 'NSE', scan: 'OI Buildup > 10%', value: `+${(s.oiChg/100000).toFixed(1)}L OI`, ltp: s.ltp, chgP: chgP.toFixed(2) })
+        }
+      })
+      if (scannedResults.length > 0) setResults(p => [...scannedResults, ...p].slice(0, 100))
+    }, 10000)
     return () => clearInterval(iv)
-  }, [isScanning])
+  }, [isScanning, symbols, activeScans])
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: 'var(--bg-panel)' }}>

@@ -2,15 +2,9 @@ import { useState } from 'react'
 import { exportGridCSV } from '../utils/gridUtils'
 import ActionIcon, { ActionIconRow } from '../components/ActionIcons'
 
-const SAMPLE_ALERTS = [
-  { id:1, symbol:'NIFTY 24200CE', type:'price', condition:'above', value:'150.00', status:'active', triggered:false },
-  { id:2, symbol:'RELIANCE', type:'price', condition:'below', value:'2500.00', status:'active', triggered:true, trigTime:'14:22:15' },
-  { id:3, symbol:'BANKNIFTY FUT', type:'volume', condition:'above', value:'500000', status:'active', triggered:false },
-  { id:4, symbol:'NIFTY 24200PE', type:'oi', condition:'above', value:'5000000', status:'paused', triggered:false },
-]
 
 export default function AlertsManager() {
-  const [alerts, setAlerts] = useState(SAMPLE_ALERTS)
+  const [alerts, setAlerts] = useState([])
   const [showAdd, setShowAdd] = useState(false)
   const [newAlert, setNewAlert] = useState({ symbol:'', type:'price', condition:'above', value:'', sound:true, popup:true })
   const sNA = (k,v) => setNewAlert(p=>({...p,[k]:v}))

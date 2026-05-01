@@ -303,6 +303,82 @@ class EngineConnector {
     } catch { return null; }
   }
 
+  /** Fetch Intraday OHLC (1-min candles, last trading day) */
+  async getIntradayOHLC({ securityId, exchangeSegment, instrument }) {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const res = await fetch(`${this.apiUrl}/api/market/historical`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('dhan_token')}`,
+          'X-Client-Id': localStorage.getItem('dhan_client_id')
+        },
+        body: JSON.stringify({
+          securityId: String(securityId), exchangeSegment, instrument,
+          interval: '1', oi: false, isIntraday: true,
+          fromDate: today, toDate: today
+        })
+      });
+      const data = await res.json();
+      return data.success ? data.data : null;
+    } catch { return null; }
+  }
+
+  /** Fetch full quote with 5-level depth */
+  async getFullQuote(instrumentMap) {
+    try {
+      const res = await fetch(`${this.apiUrl}/api/market/fullquote`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('dhan_token')}`,
+          'X-Client-Id': localStorage.getItem('dhan_client_id')
+        },
+        body: JSON.stringify(instrumentMap)
+      });
+      const data = await res.json();
+      return data.success ? data.data : null;
+    } catch { return null; }
+  }
+
+  /** Fetch option chain from Dhan */
+  async getOptionChain({ underlyingScrip, underlyingSeg, expiryDate }) {
+    try {
+      const res = await fetch(`${this.apiUrl}/api/market/chain`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('dhan_token')}`,
+          'X-Client-Id': localStorage.getItem('dhan_client_id')
+        },
+        body: JSON.stringify({
+          UnderlyingScrip: underlyingScrip, UnderlyingSeg: underlyingSeg,
+          ExpiryDate: expiryDate
+        })
+      });
+      const data = await res.json();
+      return data.success ? data.data : null;
+    } catch { return null; }
+  }
+
+  /** Fetch expiry list from Dhan */
+  async getExpiryList({ underlyingScrip, underlyingSeg }) {
+    try {
+      const res = await fetch(`${this.apiUrl}/api/market/expirylist`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('dhan_token')}`,
+          'X-Client-Id': localStorage.getItem('dhan_client_id')
+        },
+        body: JSON.stringify({ UnderlyingScrip: underlyingScrip, UnderlyingSeg: underlyingSeg })
+      });
+      const data = await res.json();
+      return data.success ? data.data : null;
+    } catch { return null; }
+  }
+
   /** Fetch LTP + OHLC for multiple instruments (for polling) */
   async getLTP(instrumentMap) {
     try {

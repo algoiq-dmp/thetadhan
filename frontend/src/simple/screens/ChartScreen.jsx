@@ -1,23 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import useAppStore from '../stores/useAppStore'
+import engineConnector from '../../services/engineConnector'
 import InlineSettings, { SField, SSel, SChk, GearBtn } from '../components/InlineSettings'
-
-// Generate mock candlestick data
-const generateCandles = (count = 120) => {
-  const candles = []
-  let price = 24100
-  const now = new Date()
-  for (let i = count; i >= 0; i--) {
-    const time = new Date(now - i * 60000)
-    const open = price + (Math.random() - 0.48) * 15
-    const close = open + (Math.random() - 0.48) * 20
-    const high = Math.max(open, close) + Math.random() * 10
-    const low = Math.min(open, close) - Math.random() * 10
-    const vol = Math.floor(5000 + Math.random() * 15000)
-    candles.push({ time, open, high, low, close, vol })
-    price = close
-  }
-  return candles
-}
 
 // Calculate RSI
 const calcRSI = (candles, period = 14) => {
@@ -63,12 +47,15 @@ const calcBB = (candles, period = 20, mult = 2) => {
 
 export default function ChartScreen() {
   const canvasRef = useRef(null)
-  const [interval, setInterval_] = useState('1m')
-  const [symbol] = useState('NIFTY 24200CE')
-  const [candles] = useState(() => generateCandles(120))
+  const selectedSymbol = useAppStore(s => s.getSelectedSymbol())
+  const symbols = useAppStore(s => s.symbols)
+  const sym = selectedSymbol || symbols[0]
+  const [interval, setInterval_] = useState('1D')
+  const [candles, setCandles] = useState([])
+  const [loading, setLoading] = useState(true)
   const [showSettings, setShowSettings] = useState(false)
   const [activeIndicators, setActiveIndicators] = useState({ SMA: true, BB: false, RSI: false, MACD: false, VWAP: false, EMA: false })
-  const [activeTool, setActiveTool] = useState(null) // 'trendline','hline','fib','rect','text'
+  const [activeTool, setActiveTool] = useState(null)
   const [drawings, setDrawings] = useState([])
   const [drawStart, setDrawStart] = useState(null)
   const [chartSettings, setChartSettings] = useState({
@@ -76,6 +63,33 @@ export default function ChartScreen() {
   })
   const setCs = (k, v) => setChartSettings(p => ({ ...p, [k]: v }))
   const toggleInd = (key) => setActiveIndicators(p => ({ ...p, [key]: !p[key] }))
+
+  // Load OHLC from Dhan
+  useEffect(() => {
+    if (!sym) return
+    setLoading(true)
+    const load = async () => {
+      const isIntraday = ['1m','5m','15m','30m','1H'].includes(interval)
+      const data = isIntraday
+        ? await engineConnector.getIntradayOHLC({ securityId: String(sym.securityId || sym.token), exchangeSegment: sym.exchange_segment || 'NSE_FNO', instrument: sym.type || 'OPTIDX' })
+        : await engineConnector.getDailyOHLC({ securityId: String(sym.securityId || sym.token), exchangeSegment: sym.exchange_segment || 'NSE_FNO', instrument: sym.type || 'OPTIDX' })
+      if (data && data.open && data.open.length > 0) {
+        const parsed = data.open.map((_, i) => ({
+          time: new Date(data.timestamp?.[i] || Date.now() - (data.open.length - i) * 86400000),
+          open: data.open[i], high: data.high[i], low: data.low[i], close: data.close[i],
+          vol: data.volume?.[i] || 0
+        }))
+        setCandles(parsed)
+      } else {
+        // Fallback: generate placeholder
+        const arr = []; let p = sym.ltp || 100
+        for (let i = 60; i >= 0; i--) { const o = p + (Math.random()-0.48)*5; const c = o + (Math.random()-0.48)*8; arr.push({ time: new Date(Date.now() - i * 86400000), open: o, high: Math.max(o,c)+Math.random()*3, low: Math.min(o,c)-Math.random()*3, close: c, vol: Math.floor(5000+Math.random()*10000) }); p = c }
+        setCandles(arr)
+      }
+      setLoading(false)
+    }
+    load()
+  }, [sym?.token, interval])
 
   // Calculate indicator data
   const rsiData = calcRSI(candles)
@@ -282,7 +296,7 @@ export default function ChartScreen() {
         display: 'flex', alignItems: 'center', gap: 4, padding: '3px 6px',
         background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)', fontSize: 10
       }}>
-        <span style={{ fontWeight: 700, color: 'var(--text-bright)', fontSize: 11 }}>{symbol}</span>
+        <span style={{ fontWeight: 700, color: 'var(--text-bright)', fontSize: 11 }}>{sym?.symbol || 'Select Symbol'}</span>
         <span style={{ color: 'var(--text-muted)', margin: '0 4px' }}>|</span>
         {intervals.map(iv => (
           <button key={iv} onClick={() => setInterval_(iv)} style={{

@@ -1,24 +1,13 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import useAppStore from '../stores/useAppStore'
+import engineConnector from '../../services/engineConnector'
 import InlineSettings, { SField, SSel, SChk, GearBtn } from '../components/InlineSettings'
-
-const STRIKES = [
-  { strike: 23800, cLtp: 450.00, cChg: 22.50, cIv: 17.8, cDelta: 0.85, cGamma: 0.003, cTheta: -8.50, cVega: 12.20, cRho: 0.15, cOi: 4500000, cOiChg: 210000, cVol: 12000, cBid: 448.50, cAsk: 451.50, pLtp: 5.00, pChg: -1.50, pIv: 19.2, pDelta: -0.15, pGamma: 0.003, pTheta: -2.10, pVega: 3.50, pRho: -0.02, pOi: 900000, pOiChg: -50000, pVol: 2000, pBid: 4.50, pAsk: 5.50 },
-  { strike: 23900, cLtp: 358.00, cChg: 18.00, cIv: 17.2, cDelta: 0.78, cGamma: 0.005, cTheta: -9.20, cVega: 14.50, cRho: 0.13, cOi: 3800000, cOiChg: 350000, cVol: 9500, cBid: 356.50, cAsk: 359.50, pLtp: 12.00, pChg: -3.25, pIv: 18.5, pDelta: -0.22, pGamma: 0.005, pTheta: -3.80, pVega: 5.20, pRho: -0.04, pOi: 1200000, pOiChg: -120000, pVol: 3500, pBid: 11.50, pAsk: 12.50 },
-  { strike: 24000, cLtp: 272.00, cChg: 14.50, cIv: 16.5, cDelta: 0.70, cGamma: 0.008, cTheta: -10.50, cVega: 16.80, cRho: 0.11, cOi: 5200000, cOiChg: 520000, cVol: 15000, cBid: 270.50, cAsk: 273.50, pLtp: 25.50, pChg: -5.80, pIv: 17.8, pDelta: -0.30, pGamma: 0.008, pTheta: -5.50, pVega: 8.40, pRho: -0.06, pOi: 2800000, pOiChg: -210000, pVol: 6200, pBid: 25.00, pAsk: 26.00 },
-  { strike: 24100, cLtp: 205.00, cChg: 12.75, cIv: 15.8, cDelta: 0.62, cGamma: 0.012, cTheta: -12.00, cVega: 18.50, cRho: 0.09, cOi: 3560000, cOiChg: 180000, cVol: 8500, cBid: 204.00, cAsk: 206.00, pLtp: 42.00, pChg: -8.50, pIv: 17.0, pDelta: -0.38, pGamma: 0.012, pTheta: -7.20, pVega: 10.50, pRho: -0.08, pOi: 3500000, pOiChg: 280000, pVol: 7800, pBid: 41.50, pAsk: 42.50 },
-  { strike: 24200, cLtp: 142.00, cChg: 8.50, cIv: 15.2, cDelta: 0.55, cGamma: 0.015, cTheta: -13.50, cVega: 20.00, cRho: 0.07, cOi: 5210000, cOiChg: 980000, cVol: 18500, cBid: 141.50, cAsk: 142.50, pLtp: 58.00, pChg: -12.25, pIv: 16.5, pDelta: -0.45, pGamma: 0.015, pTheta: -9.80, pVega: 14.20, pRho: -0.10, pOi: 3820000, pOiChg: -520000, pVol: 12500, pBid: 57.50, pAsk: 58.50, atm: true },
-  { strike: 24300, cLtp: 92.50, cChg: 5.25, cIv: 14.8, cDelta: 0.42, cGamma: 0.014, cTheta: -11.80, cVega: 18.80, cRho: 0.05, cOi: 4800000, cOiChg: 650000, cVol: 15200, cBid: 92.00, cAsk: 93.00, pLtp: 98.50, pChg: -15.00, pIv: 16.0, pDelta: -0.58, pGamma: 0.014, pTheta: -11.20, pVega: 16.50, pRho: -0.12, pOi: 4200000, pOiChg: -410000, pVol: 14000, pBid: 98.00, pAsk: 99.00 },
-  { strike: 24400, cLtp: 28.00, cChg: 2.50, cIv: 14.2, cDelta: 0.18, cGamma: 0.010, cTheta: -6.50, cVega: 11.20, cRho: 0.02, cOi: 5500000, cOiChg: 420000, cVol: 22000, cBid: 27.75, cAsk: 28.25, pLtp: 165.00, pChg: -18.75, pIv: 15.5, pDelta: -0.72, pGamma: 0.010, pTheta: -13.50, pVega: 18.00, pRho: -0.15, pOi: 2100000, pOiChg: -280000, pVol: 8500, pBid: 164.50, pAsk: 165.50 },
-  { strike: 24500, cLtp: 12.50, cChg: 1.00, cIv: 13.8, cDelta: 0.10, cGamma: 0.006, cTheta: -3.80, cVega: 6.50, cRho: 0.01, cOi: 4200000, cOiChg: 280000, cVol: 14000, cBid: 12.25, cAsk: 12.75, pLtp: 240.00, pChg: -22.00, pIv: 15.2, pDelta: -0.82, pGamma: 0.006, pTheta: -15.80, pVega: 20.50, pRho: -0.18, pOi: 1800000, pOiChg: -150000, pVol: 5200, pBid: 239.50, pAsk: 240.50 },
-  { strike: 24600, cLtp: 5.00, cChg: 0.50, cIv: 13.5, cDelta: 0.05, cGamma: 0.003, cTheta: -1.80, cVega: 3.20, cRho: 0.00, cOi: 3200000, cOiChg: 150000, cVol: 8000, cBid: 4.75, cAsk: 5.25, pLtp: 320.00, pChg: -25.50, pIv: 14.8, pDelta: -0.90, pGamma: 0.003, pTheta: -18.50, pVega: 22.00, pRho: -0.22, pOi: 1200000, pOiChg: -80000, pVol: 3000, pBid: 319.50, pAsk: 320.50 },
-]
 
 const fmtOi = (n) => (n / 100000).toFixed(1) + 'L'
 const fmtOiChg = (n) => { const v = (n / 100000).toFixed(1); return n > 0 ? '+' + v + 'L' : v + 'L' }
 const fmtVol = (n) => n >= 1000 ? (n / 1000).toFixed(1) + 'K' : n
 
-// Buildup logic: OI↑ + Price↑ = Long Building, OI↑ + Price↓ = Short Building, OI↓ + Price↑ = Short Covering, OI↓ + Price↓ = Long Unwinding
+// Buildup logic
 const getBuildup = (oiChg, priceChg) => {
   if (oiChg > 0 && priceChg > 0) return { label: 'Long Build', color: '#22c55e' }
   if (oiChg > 0 && priceChg <= 0) return { label: 'Short Build', color: '#ef4444' }
@@ -27,22 +16,80 @@ const getBuildup = (oiChg, priceChg) => {
 }
 
 export default function OptionChain() {
-  const [expiry, setExpiry] = useState('24-APR-2026')
   const openWindow = useAppStore(s => s.openWindow)
+  const [expiry, setExpiry] = useState('')
+  const [expiryList, setExpiryList] = useState([])
+  const [chainData, setChainData] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [strikesVisible, setStrikesVisible] = useState(20) // ±20 from ATM
   const [showSettings, setShowSettings] = useState(false)
-  const [viewMode, setViewMode] = useState('standard') // 'standard' | 'greeks'
+  const [viewMode, setViewMode] = useState('standard')
   const [ocSettings, setOcSettings] = useState({
     showGreeks: true, showBuildup: true, showBidAsk: true, clickToTrade: true, highlightATM: true, strikeInterval: '100', showIV: true
   })
   const setOc = (k, v) => setOcSettings(p => ({ ...p, [k]: v }))
 
+  // Load expiry list
+  useEffect(() => {
+    const loadExpiries = async () => {
+      const data = await engineConnector.getExpiryList({ underlyingScrip: '13', underlyingSeg: 'IDX_I' })
+      if (data && Array.isArray(data)) {
+        setExpiryList(data)
+        if (data.length > 0 && !expiry) setExpiry(data[0])
+      } else {
+        // Fallback
+        const fallback = ['2026-05-01','2026-05-08','2026-05-15','2026-05-29','2026-06-26']
+        setExpiryList(fallback)
+        if (!expiry) setExpiry(fallback[0])
+      }
+    }
+    loadExpiries()
+  }, [])
+
+  // Load option chain
+  useEffect(() => {
+    if (!expiry) return
+    setLoading(true)
+    const loadChain = async () => {
+      const data = await engineConnector.getOptionChain({ underlyingScrip: '13', underlyingSeg: 'IDX_I', expiryDate: expiry })
+      if (data && data.data && Array.isArray(data.data)) {
+        // Map Dhan response to grid format
+        const mapped = data.data.map(row => ({
+          strike: row.strikePrice,
+          cLtp: row.ce_ltp || 0, cChg: row.ce_close_price ? (row.ce_ltp - row.ce_close_price) : 0,
+          cIv: row.ce_iv || 0, cDelta: row.ce_delta || 0, cGamma: row.ce_gamma || 0,
+          cTheta: row.ce_theta || 0, cVega: row.ce_vega || 0, cRho: 0,
+          cOi: row.ce_oi || 0, cOiChg: row.ce_oi_change || 0, cVol: row.ce_volume || 0,
+          cBid: row.ce_bid_price || 0, cAsk: row.ce_ask_price || 0,
+          pLtp: row.pe_ltp || 0, pChg: row.pe_close_price ? (row.pe_ltp - row.pe_close_price) : 0,
+          pIv: row.pe_iv || 0, pDelta: row.pe_delta || 0, pGamma: row.pe_gamma || 0,
+          pTheta: row.pe_theta || 0, pVega: row.pe_vega || 0, pRho: 0,
+          pOi: row.pe_oi || 0, pOiChg: row.pe_oi_change || 0, pVol: row.pe_volume || 0,
+          pBid: row.pe_bid_price || 0, pAsk: row.pe_ask_price || 0,
+        }))
+        setChainData(mapped)
+      }
+      setLoading(false)
+    }
+    loadChain()
+    const timer = setInterval(loadChain, 10000) // refresh every 10s
+    return () => clearInterval(timer)
+  }, [expiry])
+
   const onClickLtp = (strike, type) => {
     openWindow({ id: type === 'CE' ? 'buy' : 'sell', title: `${type === 'CE' ? 'Buy' : 'Sell'} Order [${type === 'CE' ? 'F1' : 'F2'}]`, x: 50, y: 20, w: 380, h: 580 })
   }
 
+  // Find ATM and limit to ±N strikes
+  const spotPrice = chainData.length > 0 ? chainData.reduce((closest, s) => Math.abs(s.cLtp - s.pLtp) < Math.abs(closest.cLtp - closest.pLtp) ? s : closest, chainData[0])?.strike : 0
+  const atmIdx = chainData.findIndex(s => s.strike === spotPrice)
+  const startIdx = Math.max(0, atmIdx - strikesVisible)
+  const endIdx = Math.min(chainData.length, atmIdx + strikesVisible + 1)
+  const STRIKES = chainData.slice(startIdx, endIdx).map(s => ({ ...s, atm: s.strike === spotPrice }))
+
   const totalCeOi = STRIKES.reduce((a, s) => a + s.cOi, 0)
   const totalPeOi = STRIKES.reduce((a, s) => a + s.pOi, 0)
-  const pcr = (totalPeOi / totalCeOi).toFixed(2)
+  const pcr = totalCeOi > 0 ? (totalPeOi / totalCeOi).toFixed(2) : '—'
 
   // Build header columns based on view mode
   const showGreeks = viewMode === 'greeks' || ocSettings.showGreeks
@@ -57,13 +104,16 @@ export default function OptionChain() {
         background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)', fontSize: 10, flexWrap: 'wrap'
       }}>
         <span style={{ fontWeight: 700, color: 'var(--text-bright)', fontSize: 12 }}>NIFTY</span>
-        <span style={{ color: 'var(--accent)' }}>Spot: <b>24,250.50</b></span>
+        <span style={{ color: 'var(--accent)' }}>ATM: <b>{spotPrice || '—'}</b></span>
+        {loading && <span style={{ color: '#eab308', fontSize: 9 }}>⏳ Loading...</span>}
         <span style={{ color: 'var(--text-muted)' }}>|</span>
         <span style={{ color: '#7a7a8c' }}>Expiry:</span>
         <select style={{ background: 'var(--bg-input)', color: 'var(--text-primary)', border: '1px solid var(--border)', fontSize: 10, height: 18 }}
           value={expiry} onChange={e => setExpiry(e.target.value)}>
-          <option>24-APR-2026</option><option>01-MAY-2026</option><option>29-MAY-2026</option><option>26-JUN-2026</option>
+          {expiryList.map(e => <option key={e} value={e}>{e}</option>)}
         </select>
+        <span style={{ color: '#7a7a8c', fontSize: 9 }}>±{strikesVisible}</span>
+        <button onClick={() => setStrikesVisible(v => v + 10)} style={{ padding: '1px 6px', fontSize: 8, background: 'rgba(0,188,212,0.1)', color: 'var(--accent)', border: '1px solid var(--border)', cursor: 'pointer' }}>+10 More</button>
         <div style={{ display: 'flex', gap: 3, marginLeft: 4 }}>
           <button onClick={() => setViewMode('standard')} style={{
             padding: '1px 6px', fontSize: 8, border: '1px solid var(--border)', cursor: 'pointer',

@@ -1,16 +1,21 @@
-import { useState } from 'react'
-import { MOCK_POSITIONS } from '../mock/data'
+import { useState, useEffect } from 'react'
+import useAppStore from '../stores/useAppStore'
 import InlineSettings, { SField, SSel, SChk, GearBtn } from '../components/InlineSettings'
 import { ConfirmDialog } from '../components/ContextMenu'
 import { exportGridCSV, sortGridData, filterGridData, SortTh } from '../utils/gridUtils'
 import ActionIcon, { ActionIconRow } from '../components/ActionIcons'
 
 export default function NetPosition() {
+  const allPositions = useAppStore(s => s.positions)
+  const refreshPortfolio = useAppStore(s => s.refreshPortfolio)
   const [sortKey, setSortKey] = useState(null)
   const [sortAsc, setSortAsc] = useState(true)
   const [qFilter, setQFilter] = useState('')
   const onSort = (k) => { if (sortKey === k) setSortAsc(!sortAsc); else { setSortKey(k); setSortAsc(true) } }
-  let posData = filterGridData(MOCK_POSITIONS, qFilter, ['symbol','exchange','product'])
+  let posData = filterGridData(allPositions, qFilter, ['symbol','exchange','product'])
+
+  // Auto-refresh positions
+  useEffect(() => { refreshPortfolio(); const t = setInterval(refreshPortfolio, 5000); return () => clearInterval(t); }, [])
   posData = sortGridData(posData, sortKey, sortAsc)
   const totalMtm = posData.reduce((a, p) => a + p.pnl, 0)
   const totalRealized = posData.reduce((a, p) => a + p.realizedPnl, 0)
@@ -127,7 +132,7 @@ export default function NetPosition() {
       {confirmSqOff && (
         <ConfirmDialog
           title="Square Off All Positions"
-          message={`Are you sure you want to square off ALL ${MOCK_POSITIONS.filter(p => p.netQty !== 0).length} open positions at market price? This will send market orders for each position.`}
+          message={`Are you sure you want to square off ALL ${allPositions.filter(p => p.netQty !== 0).length} open positions at market price? This will send market orders for each position.`}
           confirmLabel="Square Off All"
           danger={true}
           onConfirm={() => setConfirmSqOff(false)}

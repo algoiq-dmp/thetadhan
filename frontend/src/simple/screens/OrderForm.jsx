@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { MOCK_DEPTH } from '../mock/data'
+// Depth data loaded dynamically via engineConnector
+const MOCK_DEPTH = { buy: [{qty:0,price:0},{qty:0,price:0},{qty:0,price:0},{qty:0,price:0},{qty:0,price:0}], sell: [{qty:0,price:0},{qty:0,price:0},{qty:0,price:0},{qty:0,price:0},{qty:0,price:0}] }
 import InlineSettings, { SField, SSel, SChk, GearBtn } from '../components/InlineSettings'
 
 const LOT_SIZES = { NIFTY: 75, BANKNIFTY: 30, RELIANCE: 250, TCS: 175, INFY: 300, HDFCBANK: 550, SBIN: 1500 }

@@ -1,5 +1,6 @@
 import useAppStore from '../stores/useAppStore'
-import { MOCK_DEPTH } from '../mock/data'
+// Depth data loaded dynamically via engineConnector
+const MOCK_DEPTH = { buy: [{qty:0,price:0},{qty:0,price:0},{qty:0,price:0},{qty:0,price:0},{qty:0,price:0}], sell: [{qty:0,price:0},{qty:0,price:0},{qty:0,price:0},{qty:0,price:0},{qty:0,price:0}] }
 
 export default function MarketDepth() {
   const symbols = useAppStore(s => s.symbols)

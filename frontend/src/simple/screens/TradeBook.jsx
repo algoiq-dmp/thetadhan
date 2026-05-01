@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { MOCK_TRADES } from '../mock/data'
+import useAppStore from '../stores/useAppStore'
 import InlineSettings, { SField, SSel, SChk, GearBtn } from '../components/InlineSettings'
 import { exportGridCSV, sortGridData, filterGridData, SortTh } from '../utils/gridUtils'
 import ActionIcon from '../components/ActionIcons'
 
 export default function TradeBook() {
+  const allTrades = useAppStore(s => s.trades)
   const [showSettings, setShowSettings] = useState(false)
   const [tbSettings, setTbSettings] = useState({
     autoRefresh: true, exportFormat: 'CSV', showOrderId: true, showProduct: true, highlightRecent: true
@@ -15,7 +16,7 @@ export default function TradeBook() {
   const [qFilter, setQFilter] = useState('')
   const onSort = (k) => { if (sortKey === k) setSortAsc(!sortAsc); else { setSortKey(k); setSortAsc(true) } }
 
-  let data = filterGridData(MOCK_TRADES, qFilter, ['symbol','exchange','side','product','orderId','tradeId'])
+  let data = filterGridData(allTrades, qFilter, ['symbol','exchange','side','product','orderId','tradeId'])
   data = sortGridData(data, sortKey, sortAsc)
   const buyTrades = data.filter(t => t.side === 'BUY')
   const sellTrades = data.filter(t => t.side === 'SELL')
@@ -27,7 +28,7 @@ export default function TradeBook() {
     <div style={{ height:'100%', display:'flex', flexDirection:'column' }}>
       {/* Toolbar */}
       <div style={{ display:'flex', gap:6, padding:'3px 6px', background:'var(--bg-surface)', borderBottom:'1px solid var(--border)', fontSize:10, alignItems:'center' }}>
-        <span style={{ color:'var(--text-secondary)' }}>Trades: <b style={{ color: 'var(--text-bright)' }}>{MOCK_TRADES.length}</b></span>
+        <span style={{ color:'var(--text-secondary)' }}>Trades: <b style={{ color: 'var(--text-bright)' }}>{allTrades.length}</b></span>
         <span style={{ color:'var(--text-muted)' }}>│</span>
         <span style={{ color:'#4dabf7', fontSize: 9 }}>Buy: {buyTrades.length}</span>
         <span style={{ color:'#ff6b6b', fontSize: 9 }}>Sell: {sellTrades.length}</span>

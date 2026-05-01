@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { MOCK_ORDERS } from '../mock/data'
+import React, { useState, useEffect } from 'react'
+import useAppStore from '../stores/useAppStore'
 import InlineSettings, { SField, SSel, SChk, GearBtn } from '../components/InlineSettings'
 import ContextMenu from '../components/ContextMenu'
 import { ConfirmDialog, ModifyOrderDialog } from '../components/ContextMenu'
@@ -9,8 +9,10 @@ import ActionIcon, { ActionIconRow } from '../components/ActionIcons'
 const FILTERS = ['ALL', 'OPEN', 'EXEC', 'REJ', 'CANCELLED']
 
 export default function OrderBook() {
+  const allOrders = useAppStore(s => s.orders)
+  const refreshPortfolio = useAppStore(s => s.refreshPortfolio)
   const [filter, setFilter] = useState('ALL')
-  const baseFiltered = filter === 'ALL' ? MOCK_ORDERS : MOCK_ORDERS.filter(o => o.status === filter)
+  const baseFiltered = filter === 'ALL' ? allOrders : allOrders.filter(o => o.status === filter)
   const [sortKey, setSortKey] = useState(null)
   const [sortAsc, setSortAsc] = useState(true)
   const [qFilter, setQFilter] = useState('')
@@ -28,12 +30,15 @@ export default function OrderBook() {
   const setOb = (k, v) => setObSettings(p => ({ ...p, [k]: v }))
 
   const counts = {
-    ALL: MOCK_ORDERS.length,
-    OPEN: MOCK_ORDERS.filter(o => o.status === 'OPEN').length,
-    EXEC: MOCK_ORDERS.filter(o => o.status === 'EXEC').length,
-    REJ: MOCK_ORDERS.filter(o => o.status === 'REJ').length,
-    CANCELLED: MOCK_ORDERS.filter(o => o.status === 'CANCELLED').length,
+    ALL: allOrders.length,
+    OPEN: allOrders.filter(o => o.status === 'OPEN' || o.status === 'PENDING' || o.status === 'TRANSIT').length,
+    EXEC: allOrders.filter(o => o.status === 'EXEC' || o.status === 'TRADED').length,
+    REJ: allOrders.filter(o => o.status === 'REJ' || o.status === 'REJECTED').length,
+    CANCELLED: allOrders.filter(o => o.status === 'CANCELLED').length,
   }
+
+  // Auto-refresh
+  useEffect(() => { refreshPortfolio(); const t = setInterval(refreshPortfolio, 5000); return () => clearInterval(t); }, [])
 
   const handleContextMenu = (e, order) => {
     e.preventDefault()
@@ -151,7 +156,7 @@ export default function OrderBook() {
         display: 'flex', alignItems: 'center', gap: 10, padding: '4px 8px',
         background: 'rgba(0,0,0,0.15)', borderTop: '1px solid var(--border)', fontSize: 9
       }}>
-        <span style={{ color: '#7a7a8c' }}>Total: <b style={{ color: '#d0d0d8' }}>{MOCK_ORDERS.length}</b></span>
+        <span style={{ color: '#7a7a8c' }}>Total: <b style={{ color: '#d0d0d8' }}>{allOrders.length}</b></span>
         <span style={{ color: '#7a7a8c' }}>Executed: <b style={{ color: '#22c55e' }}>{counts.EXEC}</b></span>
         <span style={{ color: '#7a7a8c' }}>Open: <b style={{ color: '#4dabf7' }}>{counts.OPEN}</b></span>
         <span style={{ color: '#7a7a8c' }}>Rejected: <b style={{ color: '#ef4444' }}>{counts.REJ}</b></span>

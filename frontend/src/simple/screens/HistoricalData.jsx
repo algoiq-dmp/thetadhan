@@ -1,32 +1,54 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import useAppStore from '../stores/useAppStore'
+import engineConnector from '../../services/engineConnector'
 import InlineSettings, { SField, SSel, SChk, GearBtn } from '../components/InlineSettings'
 import { exportGridCSV } from '../utils/gridUtils'
 import ActionIcon from '../components/ActionIcons'
 
-const MOCK_HISTORICAL = Array.from({ length: 50 }, (_, i) => {
-  const d = new Date()
-  d.setMinutes(d.getMinutes() - (50 - i))
-  const base = 24200 + Math.sin(i * 0.3) * 50
-  return {
-    time: d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
-    date: d.toLocaleDateString('en-IN'),
-    open: (base + Math.random() * 10).toFixed(2),
-    high: (base + 15 + Math.random() * 10).toFixed(2),
-    low: (base - 10 - Math.random() * 8).toFixed(2),
-    close: (base + 5 + Math.random() * 8).toFixed(2),
-    volume: Math.floor(2000 + Math.random() * 8000),
-    oi: Math.floor(40000000 + Math.random() * 10000000),
-  }
-})
-
 export default function HistoricalData() {
+  const selectedSymbol = useAppStore(s => s.getSelectedSymbol())
+  const symbols = useAppStore(s => s.symbols)
+  const sym = selectedSymbol || symbols[0]
   const [view, setView] = useState('intraday')
-  const [symbol] = useState('NIFTY FUT')
+  const [data, setData] = useState([])
+  const [loading, setLoading] = useState(true)
   const [showSettings, setShowSettings] = useState(false)
   const [hdSettings, setHdSettings] = useState({
     bucketSize: '1 Min', dateRange: 'Today', includeOI: true, exportFormat: 'CSV', corpAdjust: false
   })
   const setHd = (k, v) => setHdSettings(p => ({ ...p, [k]: v }))
+
+  // Load historical data
+  useEffect(() => {
+    if (!sym) return
+    setLoading(true)
+    const load = async () => {
+      const isIntraday = view === 'intraday'
+      const raw = isIntraday
+        ? await engineConnector.getIntradayOHLC({ securityId: String(sym.securityId || sym.token), exchangeSegment: sym.exchange_segment || 'NSE_FNO', instrument: sym.type || 'OPTIDX' })
+        : await engineConnector.getDailyOHLC({ securityId: String(sym.securityId || sym.token), exchangeSegment: sym.exchange_segment || 'NSE_FNO', instrument: sym.type || 'OPTIDX' })
+      if (raw && raw.open && raw.open.length > 0) {
+        const parsed = raw.open.map((_, i) => {
+          const ts = raw.timestamp?.[i] ? new Date(raw.timestamp[i]) : new Date(Date.now() - (raw.open.length - i) * (isIntraday ? 60000 : 86400000))
+          return {
+            time: ts.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+            date: ts.toLocaleDateString('en-IN'),
+            open: raw.open[i]?.toFixed(2) || '0.00',
+            high: raw.high[i]?.toFixed(2) || '0.00',
+            low: raw.low[i]?.toFixed(2) || '0.00',
+            close: raw.close[i]?.toFixed(2) || '0.00',
+            volume: raw.volume?.[i] || 0,
+            oi: 0, // Dhan chart API doesn't return OI
+          }
+        })
+        setData(parsed)
+      } else {
+        setData([])
+      }
+      setLoading(false)
+    }
+    load()
+  }, [sym?.token, view])
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -35,7 +57,7 @@ export default function HistoricalData() {
         display: 'flex', alignItems: 'center', gap: 8, padding: '4px 8px',
         background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)', fontSize: 10
       }}>
-        <span style={{ fontWeight: 700, color: 'var(--text-bright)', fontSize: 11 }}>{symbol}</span>
+        <span style={{ fontWeight: 700, color: 'var(--text-bright)', fontSize: 11 }}>{sym?.symbol || 'Select Symbol'}</span>
         <span style={{ color: 'var(--text-muted)' }}>|</span>
         {['intraday', 'daily'].map(v => (
           <button key={v} onClick={() => setView(v)} style={{
@@ -44,10 +66,11 @@ export default function HistoricalData() {
             color: view === v ? 'var(--accent)' : 'var(--text-secondary)',
           }}>{v === 'intraday' ? '1-Min OHLC' : 'Daily OHLC'}</button>
         ))}
+        {loading && <span style={{ color: '#eab308', fontSize: 9 }}>⏳ Loading...</span>}
         <span style={{ marginLeft: 'auto', color: '#7a7a8c', fontSize: 9 }}>
-          {view === 'intraday' ? 'Last 50 candles' : 'Last 5 years data available'}
+          {data.length} candles loaded
         </span>
-        <ActionIcon type="csv" tooltip="Export CSV" onClick={() => exportGridCSV(MOCK_HISTORICAL, [{key:'time',label:'Time'},{key:'date',label:'Date'},{key:'open',label:'Open'},{key:'high',label:'High'},{key:'low',label:'Low'},{key:'close',label:'Close'},{key:'volume',label:'Volume'},{key:'oi',label:'OI'}], 'HistoricalData')} />
+        <ActionIcon type="csv" tooltip="Export CSV" onClick={() => exportGridCSV(data, [{key:'time',label:'Time'},{key:'date',label:'Date'},{key:'open',label:'Open'},{key:'high',label:'High'},{key:'low',label:'Low'},{key:'close',label:'Close'},{key:'volume',label:'Volume'},{key:'oi',label:'OI'}], 'HistoricalData')} />
         <GearBtn onClick={() => setShowSettings(s => !s)} />
       </div>
 
@@ -72,12 +95,14 @@ export default function HistoricalData() {
               <th style={{ ...thS, textAlign: 'right' }}>Low</th>
               <th style={{ ...thS, textAlign: 'right' }}>Close</th>
               <th style={{ ...thS, textAlign: 'right' }}>Volume</th>
-              <th style={{ ...thS, textAlign: 'right' }}>OI</th>
               <th style={{ ...thS, textAlign: 'right' }}>Chg</th>
             </tr>
           </thead>
           <tbody>
-            {MOCK_HISTORICAL.map((d, i) => {
+            {data.length === 0 && !loading && (
+              <tr><td colSpan={8} style={{ textAlign: 'center', padding: 20, color: '#7a7a8c' }}>No data — select a symbol from MarketWatch</td></tr>
+            )}
+            {data.map((d, i) => {
               const chg = parseFloat(d.close) - parseFloat(d.open)
               return (
                 <tr key={i} style={{ borderBottom: '1px solid rgba(42,42,68,0.3)' }}>
@@ -88,7 +113,6 @@ export default function HistoricalData() {
                   <td style={{ ...tdS, textAlign: 'right', color: '#ef4444' }}>{d.low}</td>
                   <td style={{ ...tdS, textAlign: 'right', fontWeight: 600 }}>{d.close}</td>
                   <td style={{ ...tdS, textAlign: 'right' }}>{d.volume.toLocaleString()}</td>
-                  <td style={{ ...tdS, textAlign: 'right' }}>{(d.oi / 100000).toFixed(1)}L</td>
                   <td style={{ ...tdS, textAlign: 'right', color: chg >= 0 ? '#22c55e' : '#ef4444', fontWeight: 600 }}>
                     {chg >= 0 ? '+' : ''}{chg.toFixed(2)}
                   </td>

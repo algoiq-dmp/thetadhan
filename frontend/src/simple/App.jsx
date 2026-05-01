@@ -424,6 +424,7 @@ export default function App() {
   const loggedIn = useAppStore(s => s.loggedIn)
   const openWindow = useAppStore(s => s.openWindow)
   const windows = useAppStore(s => s.windows)
+  const symbols = useAppStore(s => s.symbols)
   const savedWorkspaces = useAppStore(s => s.savedWorkspaces)
   const currentWorkspace = useAppStore(s => s.currentWorkspace)
   const [showShortcuts, setShowShortcuts] = useState(false)
@@ -547,13 +548,18 @@ export default function App() {
 
   if (!loggedIn) return null
 
+  // Live index data from loaded symbols, with fallbacks
+  const getIdx = (name, tokens) => {
+    const sym = symbols.find(s => tokens.includes(s.symbol) || tokens.includes(s.token?.toString()))
+    return sym ? { name, val: sym.ltp?.toLocaleString('en-IN', {minimumFractionDigits:2}) || '—', chg: (sym.chg >= 0 ? '+' : '') + (sym.chg?.toFixed(2) || '0.00'), chgP: (sym.chgP >= 0 ? '+' : '') + (sym.chgP?.toFixed(2) || '0.00') } : { name, val: '—', chg: '—', chgP: '—' }
+  }
   const indices = [
-    { name: 'NIFTY 50', val: '24,250.50', chg: '+180.25', chgP: '+0.75' },
-    { name: 'BANK NIFTY', val: '51,520.00', chg: '+425.10', chgP: '+0.83' },
-    { name: 'SENSEX', val: '79,850.25', chg: '+520.75', chgP: '+0.66' },
-    { name: 'INDIA VIX', val: '14.25', chg: '-0.85', chgP: '-5.63' },
-    { name: 'NIFTY IT', val: '33,150.00', chg: '-120.50', chgP: '-0.36' },
-    { name: 'NIFTY FIN', val: '22,850.00', chg: '+195.25', chgP: '+0.86' },
+    getIdx('NIFTY 50', ['NIFTY', 'NIFTY 50', '4']),
+    getIdx('BANK NIFTY', ['BANKNIFTY', 'BANK NIFTY', '8']),
+    getIdx('SENSEX', ['SENSEX', '12']),
+    getIdx('INDIA VIX', ['INDIA VIX', '1']),
+    getIdx('NIFTY IT', ['NIFTY IT', '25']),
+    getIdx('NIFTY FIN', ['NIFTY FIN', 'FINNIFTY', '15']),
   ]
 
   return (

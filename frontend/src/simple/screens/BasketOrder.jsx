@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import engineConnector from '../../services/engineConnector'
+import useAppStore from '../stores/useAppStore'
 
 const SAMPLE = [
   { id:1, exchange:'NSE', symbol:'NIFTY 24200CE', side:'BUY', qty:50, price:'142.00', product:'MIS', orderType:'LMT', enabled:true },
@@ -18,13 +20,25 @@ export default function BasketOrder() {
   const enabledCount = orders.filter(o => o.enabled).length
   const totalValue = orders.filter(o => o.enabled).reduce((a, o) => a + (parseFloat(o.price||0) * o.qty), 0)
 
-  const submitAll = () => {
+  const submitAll = async () => {
     setSubmitting(true); setSubmitted(0)
-    let i = 0
-    const interval = setInterval(() => {
-      if (i >= enabledCount) { clearInterval(interval); setSubmitting(false); return }
-      i++; setSubmitted(i)
-    }, 300)
+    const addMessage = useAppStore.getState().addMessage
+    const enabled = orders.filter(o => o.enabled)
+    for (let i = 0; i < enabled.length; i++) {
+      const o = enabled[i]
+      const order = {
+        transactionType: o.side, exchangeSegment: 'NSE_FNO',
+        productType: o.product === 'MIS' ? 'INTRADAY' : o.product === 'CNC' ? 'CNC' : 'MARGIN',
+        orderType: o.orderType === 'MKT' ? 'MARKET' : 'LIMIT',
+        validity: 'DAY', securityId: o.symbol,
+        quantity: o.qty, price: parseFloat(o.price) || 0,
+      }
+      const res = await engineConnector.placeOrder(order)
+      if (res.success) addMessage('order', `✓ Basket leg ${i+1}: ${o.side} ${o.symbol} placed`)
+      else addMessage('rejection', `✗ Basket leg ${i+1} failed: ${res.error}`)
+      setSubmitted(i + 1)
+    }
+    setSubmitting(false)
   }
 
   return (

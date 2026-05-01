@@ -98,15 +98,7 @@ class EngineConnector {
     } catch { return []; }
   }
 
-  /** Get Option Chain */
-  async getOptionChain(symbol, expiry) {
-    try {
-      const url = `${this.apiUrl}/api/instruments/chain/${encodeURIComponent(symbol)}${expiry ? '?expiry=' + expiry : ''}`;
-      const res = await fetch(url);
-      const data = await res.json();
-      return data.chain || [];
-    } catch { return []; }
-  }
+
 
   /** Place Order to Dhan */
   async placeOrder(order) {

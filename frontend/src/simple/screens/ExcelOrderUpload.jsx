@@ -60,15 +60,28 @@ export default function ExcelOrderUpload() {
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'bulk_order_template.csv'; a.click()
   }
 
-  const submitAll = () => {
+  const submitAll = async () => {
     setSubmitting(true); setSubmitted(0)
     const valid = orders.filter(o => o._status !== 'error')
-    let i = 0
-    const interval = setInterval(() => {
-      if (i >= valid.length) { clearInterval(interval); setSubmitting(false); return }
-      valid[i]._status = Math.random() > 0.15 ? 'executed' : 'rejected'
-      i++; setSubmitted(i); setOrders([...orders])
-    }, 200)
+    for (let i = 0; i < valid.length; i++) {
+      const o = valid[i]
+      try {
+        const { default: engineConnector } = await import('../../services/engineConnector')
+        const res = await engineConnector.placeOrder({
+          transactionType: o.Side?.toUpperCase() || 'BUY',
+          exchangeSegment: o.Exchange === 'BSE' ? 'BSE_EQ' : o.Instrument?.includes('FUT') || o.Instrument?.includes('OPT') ? 'NSE_FNO' : 'NSE_EQ',
+          productType: o.Product === 'MIS' ? 'INTRADAY' : o.Product === 'CNC' ? 'CNC' : 'MARGIN',
+          orderType: o.OrderType === 'MKT' ? 'MARKET' : 'LIMIT',
+          validity: o.Validity || 'DAY',
+          securityId: o.Symbol,
+          quantity: parseInt(o.Qty) || 0,
+          price: parseFloat(o.Price) || 0,
+        })
+        valid[i]._status = res.success ? 'executed' : 'rejected'
+      } catch { valid[i]._status = 'rejected' }
+      setSubmitted(i + 1); setOrders([...orders])
+    }
+    setSubmitting(false)
   }
 
   const validCount = orders.filter(o => o._status === 'ready' || o._status === 'executed').length

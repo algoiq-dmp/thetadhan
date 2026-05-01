@@ -33,23 +33,23 @@ export default function TradeTrail() {
   let cumPnl = 0
   trail.forEach(t => { cumPnl += t.mtm; t.cumPnl = cumPnl })
 
-  const MOCK_TRAIL = trail // alias for minimal JSX changes
+  const allEvents = trail // alias for minimal JSX changes
   const [eventFilter, setEventFilter] = useState('ALL')
   const [sideFilter, setSideFilter] = useState('ALL')
   const [symFilter, setSymFilter] = useState('')
 
-  const filtered = MOCK_TRAIL.filter(t =>
+  const filtered = allEvents.filter(t =>
     (eventFilter === 'ALL' || t.event === eventFilter) &&
     (sideFilter === 'ALL' || t.side === sideFilter) &&
     (!symFilter || t.symbol.toLowerCase().includes(symFilter.toLowerCase()))
   )
 
-  const execTrades = MOCK_TRAIL.filter(t => t.event === 'Executed')
+  const execTrades = allEvents.filter(t => t.event === 'Executed')
   const totalTrades = execTrades.length
   const winners = execTrades.filter(t => t.mtm > 0).length
   const winRate = totalTrades > 0 ? Math.round(winners / totalTrades * 100) : 0
-  const peakPnl = MOCK_TRAIL.length > 0 ? Math.max(...MOCK_TRAIL.map(t => t.cumPnl)) : 0
-  const finalPnl = MOCK_TRAIL[MOCK_TRAIL.length - 1]?.cumPnl || 0
+  const peakPnl = allEvents.length > 0 ? Math.max(...allEvents.map(t => t.cumPnl)) : 0
+  const finalPnl = allEvents[allEvents.length - 1]?.cumPnl || 0
 
   const exportCSV = () => {
     const header = 'Time,Event,Symbol,Side,Qty,Price,Underlying,IV,OI Chg,MTM,Cumul P&L\n'
@@ -67,7 +67,7 @@ export default function TradeTrail() {
           { label: 'Win Rate', val: `${winRate}%`, color: winRate >= 50 ? '#22c55e' : '#ef4444' },
           { label: 'Final P&L', val: `₹${finalPnl.toLocaleString()}`, color: finalPnl >= 0 ? '#22c55e' : '#ef4444' },
           { label: 'Peak P&L', val: `₹${peakPnl.toLocaleString()}`, color: '#c084fc' },
-          { label: 'Events', val: MOCK_TRAIL.length, color: 'var(--text-secondary)' },
+          { label: 'Events', val: allEvents.length, color: 'var(--text-secondary)' },
         ].map((c, i) => (
           <div key={i} style={{
             flex: 1, padding: '6px 10px', background: 'rgba(0,0,0,0.15)', border: '1px solid var(--border)',
@@ -155,7 +155,7 @@ export default function TradeTrail() {
 
       {/* Footer */}
       <div style={{ padding: '4px 10px', background: 'rgba(0,0,0,0.15)', borderTop: '1px solid var(--border)', fontSize: 9, display: 'flex', gap: 12, color: 'var(--text-muted)' }}>
-        <span>Showing: <b style={{ color: 'var(--text-primary)' }}>{filtered.length}</b> of {MOCK_TRAIL.length}</span>
+        <span>Showing: <b style={{ color: 'var(--text-primary)' }}>{filtered.length}</b> of {allEvents.length}</span>
         <span>Date: <b style={{ color: 'var(--accent)' }}>27-Apr-2026</b></span>
         <span style={{ marginLeft: 'auto' }}>Session: 09:15 — 15:30 IST</span>
       </div>

@@ -2,15 +2,10 @@ import { useState } from 'react'
 import engineConnector from '../../services/engineConnector'
 import useAppStore from '../stores/useAppStore'
 
-const SAMPLE = [
-  { id:1, exchange:'NSE', symbol:'NIFTY 24200CE', side:'BUY', qty:50, price:'142.00', product:'MIS', orderType:'LMT', enabled:true },
-  { id:2, exchange:'NSE', symbol:'NIFTY 24300CE', side:'SELL', qty:50, price:'92.50', product:'MIS', orderType:'LMT', enabled:true },
-  { id:3, exchange:'NSE', symbol:'BANKNIFTY FUT', side:'BUY', qty:30, price:'51500', product:'NRML', orderType:'MKT', enabled:true },
-  { id:4, exchange:'NSE', symbol:'RELIANCE', side:'BUY', qty:250, price:'2540.50', product:'CNC', orderType:'LMT', enabled:true },
-]
+const EMPTY_LEG = { id: 1, exchange:'NSE', symbol:'', side:'BUY', qty:50, price:'0', product:'MIS', orderType:'LMT', enabled:true }
 
 export default function BasketOrder() {
-  const [orders, setOrders] = useState(SAMPLE)
+  const [orders, setOrders] = useState([EMPTY_LEG])
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(0)
   const toggle = (id) => setOrders(prev => prev.map(o => o.id === id ? { ...o, enabled: !o.enabled } : o))

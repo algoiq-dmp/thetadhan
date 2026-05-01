@@ -3,7 +3,9 @@ import useMarketStore from './store/useMarketStore';
 import useAuthStore from './store/useAuthStore';
 import { simulateTick } from './data/mockUniverse';
 import useSocket, { fetchAPI } from './hooks/useSocket';
-import LoginPage from './auth/LoginPage';
+import SimpleApp from './simple/App';
+import SimpleLoginScreen from './simple/screens/LoginScreen';
+import './simple/index.css';
 import Header from './components/Header';
 import Toolbar from './components/Toolbar';
 import StatusBar from './components/StatusBar';
@@ -68,6 +70,11 @@ export default function App() {
   const [showOrderBookPopup, setShowOrderBookPopup] = useState(false);
   const [showMarketDepthPopup, setShowMarketDepthPopup] = useState(false);
   const [showOrderEntryPopup, setShowOrderEntryPopup] = useState(false);
+  const [platformMode, setPlatformMode] = useState(localStorage.getItem('ty_platform_mode') || 'simple');
+  const [showPinDialog, setShowPinDialog] = useState(false);
+  const [pinInput, setPinInput] = useState('');
+  const [pinError, setPinError] = useState('');
+  const [isLoggedIn, setIsLoggedIn] = useState(!!(localStorage.getItem('dhan_token') && localStorage.getItem('dhan_client_id')));
 
   // Restore Dhan session on page load (Bug #7 fix)
   useEffect(() => {
@@ -431,9 +438,81 @@ export default function App() {
     );
   };
 
-  return !isAuthenticated ? <LoginPage /> : (
+  // Platform toggle with PIN
+  const handlePlatformToggle = () => {
+    const storedPin = localStorage.getItem('ty_adv_pin');
+    if (!storedPin) {
+      // First time — set PIN
+      const pin = prompt('Set 4-digit PIN for Advanced Platform:');
+      if (pin && pin.length === 4 && /^\d{4}$/.test(pin)) {
+        localStorage.setItem('ty_adv_pin', btoa(pin));
+        const newMode = platformMode === 'simple' ? 'advanced' : 'simple';
+        localStorage.setItem('ty_platform_mode', newMode);
+        setPlatformMode(newMode);
+      }
+    } else {
+      if (platformMode === 'advanced') {
+        // Going back to simple doesn't need PIN
+        localStorage.setItem('ty_platform_mode', 'simple');
+        setPlatformMode('simple');
+      } else {
+        setShowPinDialog(true); setPinInput(''); setPinError('');
+      }
+    }
+  };
+  const verifyPin = () => {
+    const stored = localStorage.getItem('ty_adv_pin');
+    if (btoa(pinInput) === stored) {
+      setShowPinDialog(false);
+      localStorage.setItem('ty_platform_mode', 'advanced');
+      setPlatformMode('advanced');
+    } else {
+      setPinError('Wrong PIN');
+    }
+  };
+
+  // Listen for login from SimpleApp
+  useEffect(() => {
+    const check = () => setIsLoggedIn(!!(localStorage.getItem('dhan_token') && localStorage.getItem('dhan_client_id')));
+    window.addEventListener('storage', check);
+    const interval = setInterval(check, 500);
+    return () => { window.removeEventListener('storage', check); clearInterval(interval); };
+  }, []);
+
+  // If not logged in, show Light-Z login
+  if (!isLoggedIn) return <SimpleLoginScreen />;
+
+  // Simple mode → show Light-Z MDI terminal
+  if (platformMode === 'simple') return (
+    <div style={{ position: 'relative', width: '100%', height: '100vh' }}>
+      <SimpleApp />
+      {/* Floating toggle button */}
+      <button onClick={handlePlatformToggle} style={{ position: 'fixed', bottom: 12, right: 12, zIndex: 99999, padding: '6px 14px', background: 'linear-gradient(135deg, #7c4dff, #448aff)', color: '#fff', border: 'none', borderRadius: 20, fontSize: 11, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 16px rgba(124,77,255,0.4)', display: 'flex', alignItems: 'center', gap: 6 }}>
+        🎯 Advanced Mode
+      </button>
+      {showPinDialog && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 100000, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => setShowPinDialog(false)}>
+          <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a2e', border: '1px solid #2a2a44', borderRadius: 12, padding: 24, width: 300, textAlign: 'center' }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#e0e0e8', marginBottom: 16 }}>🔐 Enter Advanced PIN</div>
+            <input value={pinInput} onChange={e => setPinInput(e.target.value)} type="password" maxLength={4} placeholder="4-digit PIN" autoFocus
+              onKeyDown={e => e.key === 'Enter' && verifyPin()}
+              style={{ width: '100%', padding: '10px', textAlign: 'center', fontSize: 20, letterSpacing: 12, background: '#0d0d1a', border: '1px solid #2a2a44', borderRadius: 6, color: '#e0e0e8', fontWeight: 700 }} />
+            {pinError && <div style={{ color: '#ff1744', fontSize: 11, marginTop: 8 }}>{pinError}</div>}
+            <button onClick={verifyPin} style={{ marginTop: 12, padding: '8px 24px', background: '#7c4dff', color: '#fff', border: 'none', borderRadius: 6, fontWeight: 700, cursor: 'pointer' }}>Unlock</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  // Advanced mode
+  return (
     <div className={`app-layout${isFullscreen ? ' fullscreen' : ''}`}>
       <Header searchRef={searchRef} onOpenEngineSettings={() => setShowEngineSettings(true)} onOpenHelp={() => setShowHelp(true)} onOpenPositions={() => setShowPositionPopup(true)} onOpenOrders={() => setShowOrderBookPopup(true)} />
+      {/* Back to Simple button */}
+      <button onClick={handlePlatformToggle} style={{ position: 'fixed', bottom: 12, right: 12, zIndex: 99999, padding: '6px 14px', background: 'linear-gradient(135deg, #f7a600, #ea580c)', color: '#fff', border: 'none', borderRadius: 20, fontSize: 11, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 16px rgba(247,166,0,0.4)', display: 'flex', alignItems: 'center', gap: 6 }}>
+        ⚡ Simple Mode
+      </button>
       <Toolbar searchRef={searchRef} onAddScrip={() => setShowAddScrip(true)} />
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         {/* V4: Left Navigation Bar */}
